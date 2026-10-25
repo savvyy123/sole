@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+
+# 記録（参加者の名前と写真が入る）。リポジトリには入れない
+works.sqlite
+works.sqlite-*
+
+# 書体は Commercial Type の Trial 版。規約で再配布と Web 埋め込みが禁止されているので入れない。
+# 手元にインストールされていれば local() で使われ、なければ代わりの書体で表示される
+public/fonts/

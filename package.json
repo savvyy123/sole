@@ -1,0 +1,15 @@
+{
+  "name": "memorialsole-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "memorial sole — 地面の写真と一本の線から、自分だけのソールを作る",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "cloudflared": "^0.7.3"
+  }
+}

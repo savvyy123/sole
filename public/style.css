@@ -1,0 +1,350 @@
+/*
+  書体は Commercial Type の Trial 版（Haas Grot Disp R Trial）。規約上 Web に置けないので、
+  手元にインストールされていればそれを使い（local）、fonts/ は手元での確認用。
+  この書体は日本語を持たないので、日本語はヒラギノ角ゴシック（細い太さ）で表示される。
+*/
+@font-face {
+  font-family: "Haas Grot Disp R Trial";
+  src: local("HaasGrotDispRTrial-35Thin"),
+       url("fonts/NeueHaasGrotDispRound-35Thin-Trial.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Haas Grot Disp R Trial";
+  src: local("HaasGrotDispRTrial-55Roman"),
+       url("fonts/NeueHaasGrotDispRound-55Roman-Trial.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Haas Grot Disp R Trial";
+  src: local("HaasGrotDispRTrial-66MediumIt"),
+       url("fonts/NeueHaasGrotDispRound-66MediumItalic-Trial.otf") format("opentype");
+  font-weight: 500;
+  font-style: italic;
+}
+
+:root {
+  --font: "Haas Grot Disp R Trial", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", "Helvetica Neue", sans-serif;
+  --s: 1;   /* 画面全体の倍率（app.js がウィンドウに合わせて決める。--x / --y / --h も） */
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #fff;
+  color: #000;
+  font-family: var(--font);
+}
+
+/* 1920×1080 の画面。ウィンドウに収まるように縮めて中央に置く。
+   home で Other's sole. を開くと縦に伸び、ページごと下へスクロールできる */
+.stage {
+  position: absolute;
+  left: var(--x, 0px);
+  top: var(--y, 0px);
+  width: 1920px;
+  height: var(--h, 1080px);
+  transform: scale(var(--s));
+  transform-origin: 0 0;
+}
+
+.sizer {
+  width: 1px;
+}
+
+/* ほかの人のソールを開いたら、ページ全体を縦にスクロールできるようにする */
+html.scrollable {
+  overflow-y: auto;
+}
+
+html.scrollable body {
+  height: auto;
+  overflow: visible;
+}
+
+/* 画面の切り替え：前の画面が消えきってから、次の画面が現れる（同時に進めると文字が重なるため）。
+   --fade は app.js の FADE_MS から入る */
+.screen {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--fade, 0.4s), visibility 0s var(--fade, 0.4s);
+}
+
+.screen.active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--fade, 0.4s) var(--fade, 0.4s), visibility 0s var(--fade, 0.4s);
+}
+
+/* --- 文字（Figma の値そのまま） --- */
+.ja, .en, .copy, .print, .others {
+  position: absolute;
+  margin: 0;
+  white-space: nowrap;
+  line-height: normal;
+}
+
+.ja {
+  font-size: 64px;
+  font-weight: 200;      /* 35 Thin */
+  letter-spacing: 32px;
+}
+
+.ja.two-lines {
+  line-height: 80px;
+}
+
+.en {
+  font-size: 32px;
+  font-weight: 400;      /* 55 Roman */
+}
+
+/* --- 入力欄とボタン：1px の線の箱を2枚ずらして重ねる --- */
+.field {
+  position: absolute;
+  left: 762px;
+  top: 705px;
+  width: 373px;
+  height: 95px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+
+.field .back,
+.field .front {
+  position: absolute;
+  box-sizing: border-box;
+  width: 361px;
+  height: 81px;
+  border: 1px solid #000;
+  background: #fff;
+}
+
+.field .back { left: 12px; top: 14px; }
+.field .front { left: 0; top: 0; }
+
+/* 記入した文字：Figma の「石川爽太」と同じ 24px・Thin・字送り 0.2em。箱の真ん中から書き始める */
+input.front {
+  margin: 0;
+  padding: 0 12px;
+  font-family: var(--font);
+  font-size: 24px;
+  font-weight: 200;      /* 35 Thin */
+  letter-spacing: 4.8px;
+  text-align: center;
+  color: #000;
+  outline: none;
+  border-radius: 0;
+  caret-color: #000;
+}
+
+button.field { cursor: pointer; }
+
+.field .label {
+  position: absolute;
+  left: 43px;            /* Figma: 805 - 762 */
+  top: 26px;             /* Figma: 731 - 705 */
+  font-size: 24px;
+  font-weight: 200;
+  letter-spacing: 12px;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+/* --- 気持ち：描く面 --- */
+.board-back,
+.board-front {
+  position: absolute;
+  box-sizing: border-box;
+  width: 1729px;
+  height: 839px;
+  border: 1px solid #000;
+  background: #fff;
+}
+
+.board-back { left: 98.24px; top: 201px; }
+.board-front { left: 41.24px; top: 56px; }
+
+#pad {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+[data-screen="feeling"] .ja,
+[data-screen="feeling"] .en {
+  pointer-events: none;  /* 文字の上からでも描ける */
+}
+
+/* --- home --- */
+.frame-back {
+  position: absolute;
+  left: 147px;
+  top: 162px;
+  box-sizing: border-box;
+  width: 900px;
+  height: 600px;
+  border: 1px solid #000;
+}
+
+/* 結果の枠（900×600）。中の位置は Figma の値から枠の位置（線の内側 121px）を引いたもの。
+   ほかの人のカードは、これをそのまま縮めて使う */
+.panel {
+  position: absolute;
+  left: 120px;
+  top: 120px;
+  box-sizing: border-box;
+  width: 900px;
+  height: 600px;
+  border: 1px solid #000;
+  background: #fff;
+}
+
+/* 完成したソール（Figma の灰色の箱：180, 240 / 240×388） */
+.sole-view,
+.sole-image {
+  position: absolute;
+  left: 59px;
+  top: 119px;
+  width: 240px;
+  height: 388px;
+}
+
+.sole-view canvas { display: block; }
+.sole-image { display: block; object-fit: contain; }
+
+/* Name / Place / Picture / Stroke */
+.info {
+  position: absolute;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;      /* 55 Roman */
+  letter-spacing: 3.2px;
+  line-height: normal;
+  white-space: pre;
+}
+
+/* 縦長の写真のとき */
+.info-name    { left: 358px; top: 116px; }
+.info-place   { left: 359px; top: 139px; }
+.info-picture { left: 359px; top: 223px; }
+.info-stroke  { left: 659px; top: 220px; }
+
+.out-picture,
+.out-stroke {
+  position: absolute;
+  display: block;
+  top: 248px;
+}
+
+.out-picture {
+  left: 359px;
+  width: 180px;
+  height: 240px;
+  object-fit: cover;      /* 写真は箱いっぱいに */
+}
+
+.out-stroke {
+  left: 659px;
+  width: 180px;
+  height: 120px;
+  object-fit: contain;    /* 描いた線は全体が見えるように */
+}
+
+/* 写真が横長のとき（Figma の横画面用の home） */
+.landscape .info-name    { left: 359px; top: 117px; }
+.landscape .info-picture { left: 360px; top: 220px; }
+.landscape .out-picture {
+  left: 360px;
+  width: 240px;
+  height: 180px;
+}
+
+/* 入力の振り返り：上から順に現れる */
+.reveal {
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+
+.reveal.in {
+  opacity: 1;
+}
+
+.copy {
+  font-size: 36px;
+  font-weight: 400;      /* 55 Roman */
+  letter-spacing: 7.2px;
+}
+
+.copy em {
+  font-style: italic;
+  font-weight: 500;      /* 66 Medium Italic */
+}
+
+.print {
+  font-size: 64px;
+  font-weight: 200;
+  letter-spacing: 32px;
+  line-height: 80px;
+}
+
+.others {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: var(--font);
+  font-size: 40px;
+  font-weight: 200;
+  letter-spacing: 20px;
+  cursor: pointer;
+}
+
+/* --- ほかの人のソール（Figma の展開したページ） --- */
+/* 2列。左 120px / 右 1020px、1行目の上端 1084px、行の間隔 660px（位置は app.js が決める） */
+.card {
+  position: absolute;
+  width: 780px;
+  height: 541px;
+}
+
+/* 結果の枠を 757.28 / 900 に縮めたもの。後ろの枠は同じ比率でずらす */
+.card-back {
+  position: absolute;
+  left: 22.72px;
+  top: 35.34px;
+  box-sizing: border-box;
+  width: 757.28px;
+  height: 504.85px;
+  border: 1px solid #000;
+}
+
+.panel.mini {
+  left: 0;
+  top: 0;
+  transform: scale(0.84142);
+  transform-origin: 0 0;
+}
+
+
+.message {
+  position: absolute;
+  left: 40px;
+  bottom: 20px;
+  margin: 0;
+  font-size: 20px;
+  color: #b00;
+}

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>memorial sole</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- スクロールの長さを作るための箱（画面は拡大縮小しているので、その分の高さを持たせる） -->
+    <div class="sizer" id="sizer"></div>
+
+    <!-- Figma の 1920×1080 をそのまま組み、ウィンドウに合わせて全体を拡大縮小する -->
+    <div class="stage" id="stage">
+
+        <!-- 1. 名前 -->
+        <section class="screen" data-screen="name">
+            <h1 class="ja" style="left: 575px; top: 480px;">あなたの名前は？</h1>
+            <p class="en" style="left: 826px; top: 612px;">What your name?</p>
+            <div class="field">
+                <div class="back"></div>
+                <input class="front" id="name" type="text" autocomplete="off" spellcheck="false" maxlength="24" aria-label="名前">
+            </div>
+        </section>
+
+        <!-- 2. 靴のサイズ -->
+        <section class="screen" data-screen="size">
+            <h1 class="ja" style="left: 462px; top: 480px;">あなたの靴のサイズは？</h1>
+            <p class="en" style="left: 774px; top: 612px;">What is your shoe size?</p>
+            <div class="field">
+                <div class="back"></div>
+                <input class="front" id="size" type="text" inputmode="decimal" autocomplete="off" maxlength="4" aria-label="靴のサイズ（cm）">
+            </div>
+        </section>
+
+        <!-- 3. 地面の写真 -->
+        <section class="screen" data-screen="photo">
+            <h1 class="ja two-lines" style="left: 498px; top: 380px;">好きな場所の<br>写真を送ってください</h1>
+            <p class="en" style="left: 555px; top: 604px;">Please share a picture of the ground from your favorite place.</p>
+            <button class="field" id="pick" type="button">
+                <span class="back"></span>
+                <span class="front"><span class="label">フォルダから探す</span></span>
+            </button>
+            <input id="photo" type="file" accept="image/*" hidden>
+        </section>
+
+        <!-- 4. 場所の名前 -->
+        <section class="screen" data-screen="place">
+            <h1 class="ja" style="left: 258px; top: 480px;">その場所の名前を教えてください</h1>
+            <p class="en" style="left: 742px; top: 612px;">What's the name of this place?</p>
+            <div class="field">
+                <div class="back"></div>
+                <input class="front" id="place" type="text" autocomplete="off" spellcheck="false" maxlength="40" aria-label="場所の名前">
+            </div>
+        </section>
+
+        <!-- 5. 気持ち（一本の線） -->
+        <section class="screen" data-screen="feeling">
+            <div class="board-back"></div>
+            <div class="board-front">
+                <canvas id="pad" width="1727" height="837"></canvas>
+            </div>
+            <h1 class="ja two-lines" style="left: 70px; top: 97px;">その時の気持ちを<br>一本の線で描いてください。</h1>
+            <p class="en" style="left: 70px; top: 294px;">Feel free to share your thoughts from that moment here.</p>
+        </section>
+
+        <!-- 6. 完成（home）。Other's sole. を押すと下にほかの人のソールが並ぶ -->
+        <section class="screen" data-screen="home">
+            <div class="frame-back"></div>
+
+            <!-- 結果の枠（900×600）。ほかの人のカードも同じ並びを縮めて使う -->
+            <div class="panel" id="result">
+                <div class="sole-view" id="view"></div>
+                <!-- 入力の振り返り：完成までのアニメーションの最初に、上から順に現れる -->
+                <p class="info info-name reveal">Name   :  <span id="out-name"></span></p>
+                <p class="info info-place reveal">Place   :  <span id="out-place"></span></p>
+                <p class="info info-picture reveal">Picture:</p>
+                <img class="out-picture reveal" id="out-picture" alt="">
+                <p class="info info-stroke reveal">Stroke:</p>
+                <img class="out-stroke reveal" id="out-stroke" alt="">
+            </div>
+
+            <p class="copy" style="left: 1178px; top: 224px;">Make your<br><em>memorial &amp;original</em><br>sole.</p>
+            <p class="print" style="left: 911px; top: 918px;">print your memory.</p>
+            <button class="others" id="others" type="button" style="left: 147px; top: 942px;">Other’s sole.</button>
+
+            <div class="gallery" id="gallery"></div>
+        </section>
+
+        <template id="card">
+            <article class="card">
+                <div class="card-back"></div>
+                <div class="panel mini">
+                    <img class="sole-image" alt="">
+                    <p class="info info-name">Name   :  <span class="v-name"></span></p>
+                    <p class="info info-place">Place   :  <span class="v-place"></span></p>
+                    <p class="info info-picture">Picture:</p>
+                    <img class="out-picture v-picture" alt="">
+                    <p class="info info-stroke">Stroke:</p>
+                    <img class="out-stroke v-stroke" alt="">
+                </div>
+            </article>
+        </template>
+
+        <p class="message" id="message"></p>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
