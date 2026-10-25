@@ -1,6 +1,7 @@
 import express from "express";
 import { fileURLToPath } from "node:url";
 import { db } from "./db.mjs";
+import { parseWork, IMAGE_TYPES } from "./lib/validate.mjs";
 
 const app = express();
 const publicDir = fileURLToPath(new URL("./public/", import.meta.url));
@@ -14,24 +15,6 @@ app.get("/", (req, res) => {
 
 app.use(express.static(publicDir));
 
-// --- 受け取った値を確かめる（ブラウザー側の入力制限だけに頼らない） ---
-
-const NAME_MAX = 24;
-const PLACE_MAX = 40;
-const SHOE = { min: 22, max: 30 };
-const IMAGE_MAX = 4 * 1024 * 1024;   // 画像1枚あたり
-
-// "data:image/png;base64,..." → Buffer。種類が違うものや大きすぎるものは null
-function decodeImage(dataUrl, type) {
-  const prefix = `data:${type};base64,`;
-  if (typeof dataUrl !== "string" || !dataUrl.startsWith(prefix)) return null;
-  const buf = Buffer.from(dataUrl.slice(prefix.length), "base64");
-  return buf.length > 0 && buf.length <= IMAGE_MAX ? buf : null;
-}
-
-const text = (v, max) => (typeof v === "string" && v.trim() && v.trim().length <= max ? v.trim() : null);
-const unit = (v) => (typeof v === "number" && v >= 0 && v <= 1 ? v : null);
-
 // --- 保存 ---
 
 const insertWork = db.prepare(`
@@ -40,27 +23,12 @@ const insertWork = db.prepare(`
 `);
 
 app.post("/works", (req, res) => {
-  const b = req.body ?? {};
-  const name = text(b.name, NAME_MAX);
-  const place = text(b.place, PLACE_MAX);
-  const shoeSize = Number(b.shoeSize);
-  const sole = decodeImage(b.sole, "image/png");
-  const picture = decodeImage(b.picture, "image/jpeg");
-  const stroke = decodeImage(b.stroke, "image/png");
-  const points = Array.isArray(b.strokePoints) ? JSON.stringify(b.strokePoints) : null;
-
-  if (
-    !name || !place || !(shoeSize >= SHOE.min && shoeSize <= SHOE.max) ||
-    typeof b.landscape !== "boolean" || !sole || !picture || !stroke ||
-    (points && points.length > 2 * 1024 * 1024)
-  ) {
-    return res.status(400).json({ error: "invalid" });
-  }
+  const w = parseWork(req.body);   // 確かめ方は Netlify 版と共通（lib/validate.mjs）
+  if (!w) return res.status(400).json({ error: "invalid" });
 
   const { lastInsertRowid } = insertWork.run(
-    name, place, shoeSize, b.landscape ? 1 : 0,
-    unit(b.energy), unit(b.jagged),
-    sole, picture, stroke, points,
+    w.name, w.place, w.shoeSize, w.landscape ? 1 : 0, w.energy, w.jagged,
+    w.images.sole, w.images.picture, w.images.stroke, w.points,
   );
   res.status(201).json({ id: Number(lastInsertRowid) });
 });
@@ -87,13 +55,12 @@ app.get("/works", (req, res) => {
 
 // --- 画像 ---
 
-const IMAGES = { sole: "image/png", picture: "image/jpeg", stroke: "image/png" };
 const selectImage = Object.fromEntries(
-  Object.keys(IMAGES).map((k) => [k, db.prepare(`SELECT ${k} AS data FROM works WHERE id = ?`)]),
+  Object.keys(IMAGE_TYPES).map((k) => [k, db.prepare(`SELECT ${k} AS data FROM works WHERE id = ?`)]),
 );
 
 app.get("/works/:id/:kind", (req, res) => {
-  const type = IMAGES[req.params.kind];
+  const type = IMAGE_TYPES[req.params.kind];
   const id = Number.parseInt(req.params.id, 10);
   if (!type || !Number.isInteger(id)) return res.sendStatus(404);
   const row = selectImage[req.params.kind].get(id);

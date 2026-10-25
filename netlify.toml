@@ -1,0 +1,9 @@
+# memorial sole — Netlify の設定
+# ビルドはしない。public/ をそのまま配信し、netlify/functions/ を記録の API として動かす
+# （手元で動かすときは server.mjs。こちらは Netlify では使われない）
+
+[build]
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"

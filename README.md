@@ -16,11 +16,19 @@ npm start
 
 `http://localhost:3000` を開く。同じネットワークの端末からは `http://<この PC の IP>:3000`。
 
+## Netlify で公開する
+
+リポジトリを Netlify につなぐだけで動く（`netlify.toml` に設定済み。ビルドの設定は不要）。
+Netlify では server.mjs と SQLite は使えないため、記録は `netlify/functions/works.mjs` が
+Netlify Blobs（サイトに付いている保存場所）に入れる。記録は手元の works.sqlite とは別になる。
+
 ## 構成
 
 ```
-server.mjs        ページを返し、作ったソールを記録する（Express）
+server.mjs        ページを返し、作ったソールを記録する（Express。手元で動かすとき）
 db.mjs            works テーブル（SQLite。画像も同じファイルに入る）
+netlify/functions/works.mjs   同じ記録を Netlify Blobs で行う（Netlify で公開するとき）
+lib/validate.mjs  送られてきた記録の確かめ方（両方で共通）
 public/
   index.html      6つの画面（Figma 1920×1080 をそのまま組み、ウィンドウに合わせて拡大縮小）
   app.js          画面の流れと、完成までのアニメーション
