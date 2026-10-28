@@ -1,6 +1,7 @@
 /*
   書体は FONTPLUS（index.html のスクリプト）の Neue Haas Grotesk を使う。Figma の書体との対応：
     35 Thin           → Display Pro 35 XLight（NHaasGroteskDSPro-35XLt）
+    45 Light          → Display Pro 45 Light（NHaasGroteskDSPro-45Lt）
     55 Roman          → Display Pro 55 Roman（NHaasGroteskDSPro-55Rg）
     66 Medium Italic  → Display Pro 66 Medium Italic（NHaasGroteskDSPro-66MdIt）
   FONTPLUS が読み込めないときは、Commercial Type の Trial 版（Haas Grot Disp R Trial）が
@@ -12,6 +13,14 @@
   src: local("HaasGrotDispRTrial-35Thin"),
        url("fonts/NeueHaasGrotDispRound-35Thin-Trial.otf") format("opentype");
   font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Haas Grot Disp R Trial";
+  src: local("HaasGrotDispRTrial-45Light"),
+       url("fonts/NeueHaasGrotDispRound-45Light-Trial.otf") format("opentype");
+  font-weight: 300;
   font-style: normal;
 }
 
@@ -35,6 +44,7 @@
   --font-local: "Haas Grot Disp R Trial", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", "Helvetica Neue", sans-serif;
   --font: "NHaasGroteskDSPro-55Rg", var(--font-local);                  /* 55 Roman */
   --font-thin: "NHaasGroteskDSPro-35XLt", var(--font-local);            /* 35 Thin */
+  --font-light: "NHaasGroteskDSPro-45Lt", var(--font-local);            /* 45 Light */
   --font-medium-italic: "NHaasGroteskDSPro-66MdIt", var(--font-local);  /* 66 Medium Italic */
   --s: 1;   /* 画面全体の倍率（app.js がウィンドウに合わせて決める。--x / --y / --h も） */
 }
@@ -92,11 +102,13 @@ html.scrollable body {
 }
 
 /* --- 文字（Figma の値そのまま） --- */
+/* 行の高さは Haas の normal（1.2）に固定する。normal のままだと、日本語を表示するヒラギノの
+   高さで行が広がり、Figma より文字が下にずれるため */
 .ja, .en, .copy, .print, .others {
   position: absolute;
   margin: 0;
   white-space: nowrap;
-  line-height: normal;
+  line-height: 1.2;
 }
 
 .ja {
@@ -112,7 +124,8 @@ html.scrollable body {
 
 .en {
   font-size: 32px;
-  font-weight: 400;      /* 55 Roman */
+  font-family: var(--font-light);
+  font-weight: 300;      /* 45 Light */
 }
 
 /* 画面ごとの文字の位置（Figma の値）
@@ -145,8 +158,8 @@ html.scrollable body {
 .print  { left: 911px; top: 918px; }
 .others { left: 147px; top: 942px; }
 
-/* スマホでだけ改行する */
-br.sp { display: none; }
+/* スマホでだけ出す文字（.sp）と、PC でだけ出す文字（.pc）。Figma の PC 版とスマホ版で文言が少し違うところ */
+.sp { display: none; }
 
 /* --- 入力欄とボタン：1px の線の箱を2枚ずらして重ねる --- */
 .field {
@@ -201,7 +214,7 @@ button.field { cursor: pointer; }
   font-family: var(--font-thin);
   font-weight: 200;
   letter-spacing: 12px;
-  line-height: normal;
+  line-height: 1.2;      /* Haas の normal */
   white-space: nowrap;
 }
 
@@ -276,7 +289,7 @@ button.field { cursor: pointer; }
   font-size: 16px;
   font-weight: 400;      /* 55 Roman */
   letter-spacing: 3.2px;
-  line-height: normal;
+  line-height: 1.2;      /* Haas の normal */
   white-space: pre;
 }
 
@@ -393,7 +406,8 @@ button.field { cursor: pointer; }
    縦長の画面のとき app.js が html に .mobile を付け、画面に収まるように拡大縮小する
    ========================================================================= */
 
-html.mobile br.sp { display: inline; }
+html.mobile .sp { display: inline; }
+html.mobile .pc { display: none; }
 
 html.mobile .ja {
   font-size: 15px;
@@ -614,7 +628,7 @@ html.mobile .panel.mini {
 .sheet-info {
   position: absolute;
   margin: 0;
-  line-height: normal;
+  line-height: 1.2;      /* Haas の normal */
   white-space: pre;
 }
 
