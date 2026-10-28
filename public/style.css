@@ -47,7 +47,7 @@ html, body {
   position: absolute;
   left: var(--x, 0px);
   top: var(--y, 0px);
-  width: 1920px;
+  width: var(--w, 1920px);
   height: var(--h, 1080px);
   transform: scale(var(--s));
   transform-origin: 0 0;
@@ -105,6 +105,24 @@ html.scrollable body {
   font-size: 32px;
   font-weight: 400;      /* 55 Roman */
 }
+
+/* 画面ごとの文字の位置（Figma の値） */
+[data-screen="name"] .ja    { left: 575px; top: 480px; }
+[data-screen="name"] .en    { left: 826px; top: 612px; }
+[data-screen="size"] .ja    { left: 462px; top: 480px; }
+[data-screen="size"] .en    { left: 774px; top: 612px; }
+[data-screen="photo"] .ja   { left: 498px; top: 380px; }
+[data-screen="photo"] .en   { left: 555px; top: 604px; }
+[data-screen="place"] .ja   { left: 258px; top: 480px; }
+[data-screen="place"] .en   { left: 742px; top: 612px; }
+[data-screen="feeling"] .ja { left: 70px; top: 97px; }
+[data-screen="feeling"] .en { left: 70px; top: 294px; }
+.copy   { left: 1178px; top: 224px; }
+.print  { left: 911px; top: 918px; }
+.others { left: 147px; top: 942px; }
+
+/* スマホでだけ改行する */
+br.sp { display: none; }
 
 /* --- 入力欄とボタン：1px の線の箱を2枚ずらして重ねる --- */
 .field {
@@ -301,6 +319,7 @@ button.field { cursor: pointer; }
   line-height: 80px;
 }
 
+.print,
 .others {
   padding: 0;
   border: 0;
@@ -339,6 +358,297 @@ button.field { cursor: pointer; }
   transform-origin: 0 0;
 }
 
+
+/* =========================================================================
+   スマホ（Figma の iPhone 14 & 15 Pro：393×852）
+   縦長の画面のとき app.js が html に .mobile を付け、画面の幅に合わせて拡大縮小する
+   ========================================================================= */
+html.mobile {
+  overflow-y: auto;       /* 画面より縦に長いときは下へスクロールできる */
+}
+
+html.mobile body {
+  height: auto;
+  overflow: visible;
+}
+
+html.mobile br.sp { display: inline; }
+
+html.mobile .ja {
+  font-size: 15px;
+  letter-spacing: 7.5px;
+}
+
+html.mobile .ja.two-lines,
+html.mobile [data-screen="place"] .ja {
+  line-height: 18px;
+}
+
+html.mobile .en {
+  font-size: 16px;
+  font-weight: 200;      /* 35 Thin */
+}
+
+/* 長い英文は 233px で折り返す */
+html.mobile [data-screen="photo"] .en,
+html.mobile [data-screen="feeling"] .en {
+  width: 233px;
+  white-space: normal;
+}
+
+html.mobile [data-screen="name"] .ja    { left: 105px; top: 256px; }
+html.mobile [data-screen="name"] .en    { left: 138px; top: 330px; }
+html.mobile [data-screen="size"] .ja    { left: 72px; top: 256px; }
+html.mobile [data-screen="size"] .en    { left: 122px; top: 330px; }
+html.mobile [data-screen="photo"] .ja   { left: 90px; top: 238px; }
+html.mobile [data-screen="photo"] .en   { left: 90px; top: 311px; }
+html.mobile [data-screen="place"] .ja   { left: 90px; top: 238px; }
+html.mobile [data-screen="place"] .en   { left: 90px; top: 311px; }
+html.mobile [data-screen="feeling"] .ja { left: 27px; top: 63px; }
+html.mobile [data-screen="feeling"] .en { left: 27px; top: 120px; }
+
+/* 入力欄とボタン：0.5px の線の箱（180.5×40.5）を 6, 7 ずらして重ねる */
+html.mobile .field {
+  left: 104px;
+  top: 402px;
+  width: 186.5px;
+  height: 47.5px;
+}
+
+html.mobile [data-screen="name"] .field {
+  left: 101px;
+  top: 420px;
+}
+
+html.mobile .field .back,
+html.mobile .field .front {
+  width: 180.5px;
+  height: 40.5px;
+  border-width: 0.5px;
+}
+
+html.mobile .field .back { left: 6px; top: 7px; }
+
+/* 記入した文字。16px より小さいと、iPhone では入力のたびに画面が拡大されてしまう */
+html.mobile input.front {
+  padding: 0 6px;
+  font-size: 16px;
+  letter-spacing: 3.2px;
+}
+
+html.mobile .field .label {
+  left: 21.5px;
+  top: 13px;
+  font-size: 12px;
+  letter-spacing: 6px;
+}
+
+/* 気持ち：描く面（315×600） */
+html.mobile .board-back,
+html.mobile .board-front {
+  width: 315px;
+  height: 600px;
+  border-width: 0.5px;
+}
+
+html.mobile .board-back  { left: 48px; top: 221px; }
+html.mobile .board-front { left: 27px; top: 200px; }
+
+/* home */
+html.mobile .copy {
+  left: 27px;
+  top: 25px;
+  font-size: 16px;
+  letter-spacing: 3.2px;
+  line-height: 18px;
+}
+
+html.mobile .others {
+  left: 26px;
+  top: 121px;
+  font-size: 16px;
+  letter-spacing: 8px;
+}
+
+html.mobile .print {
+  left: 168px;
+  top: 122px;
+  font-size: 14px;
+  letter-spacing: 7px;
+  line-height: 80px;
+}
+
+html.mobile .frame-back,
+html.mobile .panel {
+  width: 315px;
+  height: 600px;
+  border-width: 0.5px;
+}
+
+html.mobile .frame-back { left: 48px; top: 221px; }
+html.mobile .panel      { left: 27px; top: 200px; }
+
+/* 枠の中の位置は Figma の値から枠の位置（線の内側 27.5, 200.5）を引いたもの */
+html.mobile .sole-view,
+html.mobile .sole-image {
+  left: 49.5px;
+  top: 15.5px;
+  width: 200px;
+  height: 300px;
+}
+
+html.mobile .info {
+  font-size: 12px;
+  letter-spacing: 2.4px;
+}
+
+html.mobile .info-name,
+html.mobile .landscape .info-name    { left: 17.5px; top: 324.5px; }
+html.mobile .info-place              { left: 17.5px; top: 346.5px; }
+html.mobile .info-picture,
+html.mobile .landscape .info-picture { left: 17.5px; top: 372.5px; }
+html.mobile .info-stroke             { left: 17.5px; top: 502.5px; }
+
+/* 縦長の写真のとき */
+html.mobile .out-picture {
+  left: 89.5px;
+  top: 372.5px;
+  width: 83px;
+  height: 110px;
+}
+
+/* 横長の写真のとき */
+html.mobile .landscape .out-picture {
+  left: 86.5px;
+  width: 150px;
+  height: 112px;
+}
+
+html.mobile .out-stroke {
+  left: 89.5px;
+  top: 502.5px;
+  width: 120px;
+  height: 80px;
+}
+
+/* ほかの人のソール：home と同じ枠を1列に並べる（スマホ用の Figma がまだないので仮） */
+html.mobile .card {
+  width: 393px;
+  height: 621px;
+}
+
+html.mobile .card-back {
+  left: 48px;
+  top: 21px;
+  width: 315px;
+  height: 600px;
+  border-width: 0.5px;
+}
+
+html.mobile .panel.mini {
+  left: 27px;
+  top: 0;
+  transform: none;
+}
+
+/* --- 印刷（Figma の Print-tate / Print-Yoko） --- */
+/* Figma の 595×842（A4 の pt）をそのまま組み、A3（297×420mm）いっぱいに広げる（√2 倍）。
+   ソールの大きさは app.js が実寸から Figma の単位に直して入れる */
+@page {
+  size: A3 portrait;
+  margin: 0;
+}
+
+.sheet {
+  display: none;
+}
+
+.sheet-layout {
+  position: relative;
+  width: 595px;
+  height: 842px;
+  overflow: hidden;
+  transform: scale(1.88659);   /* 297mm ÷ 595 */
+  transform-origin: 0 0;
+}
+
+/* 左の枠（300×600、左 30 / 上 179）の中心に、実寸のソールを置く。大きいサイズは枠からはみ出す */
+.sheet-sole {
+  position: absolute;
+  left: 180px;
+  top: 479px;
+  transform: translate(-50%, -50%);
+}
+
+.sheet-copy,
+.sheet-info {
+  position: absolute;
+  margin: 0;
+  line-height: normal;
+  white-space: pre;
+}
+
+.sheet-copy {
+  left: 30px;
+  top: 11px;
+  font-size: 20px;
+  font-weight: 400;      /* 55 Roman */
+  letter-spacing: 4px;
+}
+
+.sheet-copy em {
+  font-style: italic;
+  font-weight: 500;      /* 66 Medium Italic */
+}
+
+.sheet-info {
+  font-size: 12px;
+  font-weight: 400;      /* 55 Roman */
+  letter-spacing: 2.4px;
+}
+
+.sheet-out-picture,
+.sheet-out-stroke {
+  position: absolute;
+  display: block;
+}
+
+.sheet-out-picture { object-fit: cover; }
+.sheet-out-stroke  { object-fit: contain; }
+
+/* 縦長の写真のとき（Print-tate） */
+.sheet-name    { left: 359px; top: 177px; }
+.sheet-place   { left: 359px; top: 199px; }
+.sheet-picture { left: 359px; top: 220px; }
+.sheet-out-picture { left: 360px; top: 242px; width: 120px; height: 180px; }
+.sheet-stroke  { left: 360px; top: 429px; }
+.sheet-out-stroke  { left: 360px; top: 451px; width: 180px; height: 120px; }
+
+/* 横長の写真のとき（Print-Yoko） */
+.sheet.landscape .sheet-name    { left: 360px; top: 179px; }
+.sheet.landscape .sheet-place   { left: 360px; top: 202px; }
+.sheet.landscape .sheet-picture { left: 360px; top: 221px; }
+.sheet.landscape .sheet-out-picture { left: 361px; top: 240px; width: 180px; height: 135px; }
+.sheet.landscape .sheet-stroke  { left: 361px; top: 396px; }
+.sheet.landscape .sheet-out-stroke  { left: 361px; top: 415px; width: 180px; height: 120px; }
+
+@media print {
+  html, body {
+    height: auto;
+    overflow: visible;
+  }
+
+  body > :not(.sheet) {
+    display: none !important;
+  }
+
+  .sheet {
+    display: block;
+    width: 297mm;
+    height: 420mm;
+    overflow: hidden;
+  }
+}
 
 .message {
   position: absolute;

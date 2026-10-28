@@ -12,8 +12,27 @@ const CANVAS_H = 2048;            // グラフィックのキャンバスの高�
 const SHOE = { min: 22, max: 30 };   // 受け付ける靴のサイズ（cm）
 const TOE_ROOM_CM = 1.5;              // ソールの長さ = 靴のサイズ + 余裕
 
-// ほかの人のソール（Figma の展開したページ）：2列、左 120px / 右 1020px、1行目 1084px、行の間隔 660px
-const GALLERY = { top: 1084, row: 660, left: [120, 1020], cardHeight: 541, bottom: 120 };
+// 印刷：Figma の Print-tate / Print-Yoko（595 幅）を A3（297mm 幅）に広げて刷る
+const SHEET_UNITS_PER_MM = 595 / 297;
+
+// 画面の組み方。縦長の画面（スマホ）では Figma の iPhone 用を使う
+//   gallery … ほかの人のソールの並べ方（left の数が列の数）
+//   pad     … 描く面のキャンバス。unit は「線の点の1単位」に当たるキャンバスの px
+//             （勢いや揺れの基準を PC とそろえるため、スマホでは点を 1/2 にして記録する）
+const LAYOUTS = {
+  pc: {
+    w: 1920, h: 1080,
+    // Figma の展開したページ：2列、左 120px / 右 1020px、1行目 1084px、行の間隔 660px
+    gallery: { top: 1084, row: 660, left: [120, 1020], cardHeight: 541, bottom: 120 },
+    pad: { w: 1727, h: 837, unit: 1 },
+  },
+  mobile: {
+    w: 393, h: 852,
+    // スマホ用の Figma がまだないので仮：home と同じ枠を1列に
+    gallery: { top: 900, row: 680, left: [0], cardHeight: 621, bottom: 60 },
+    pad: { w: 840, h: 1600, unit: 2 },
+  },
+};
 
 // 画面の切り替え：前の画面が消えるのにこの時間、そのあと次の画面が現れるのにこの時間
 const FADE_MS = 400;
@@ -37,6 +56,9 @@ const pad = $('pad');
 let viewer = null;
 let graphic = null;
 let modelLengthCm = 28.5;
+let soleAspect = 2.7565;   // ソールの長さ ÷ 幅
+let soleOutline = [];      // 真上から見たソールの輪郭（UV。v はかかと 0 → つま先 1）
+let finished = false;      // 完成までのアニメーションが終わったか（終わるまでは印刷しない）
 let photo = null;
 let strokes = [];
 let myWorkId = null;      // 今作ったソール（ほかの人の一覧からは外す）
@@ -45,6 +67,7 @@ let myWorkId = null;      // 今作ったソール（ほかの人の一覧から
 // 1920×1080 の画面をウィンドウに合わせて拡大縮小する
 // ほかの人のソールを開くと、画面の高さ（stageH）が伸びて下へスクロールできる
 // ---------------------------------------------------------------------------
+let layout = null;        // LAYOUTS の pc か mobile
 let stageH = 1080;
 let scale = 1;
 let offsetY = 0;
@@ -52,18 +75,29 @@ let offsetY = 0;
 function fit() {
   const vw = document.documentElement.clientWidth;    // スクロールバーの幅を除く
   const vh = document.documentElement.clientHeight;
-  scale = Math.min(vw / 1920, vh / 1080);
-  offsetY = Math.max(0, (vh - 1080 * scale) / 2);
+
+  const next = vw < vh ? LAYOUTS.mobile : LAYOUTS.pc;
+  if (next !== layout) {
+    layout = next;
+    document.documentElement.classList.toggle('mobile', layout === LAYOUTS.mobile);
+    stageH = layout.h;
+    setupPad();
+    if (galleryWorks.length) layoutGallery();
+  }
+
+  // PC は画面全体が収まるように、スマホは幅に合わせて（縦は下へスクロール）
+  scale = layout === LAYOUTS.mobile ? vw / layout.w : Math.min(vw / layout.w, vh / layout.h);
+  offsetY = Math.max(0, (vh - layout.h * scale) / 2);
   const root = document.documentElement.style;
   root.setProperty('--s', scale);
-  root.setProperty('--x', `${(vw - 1920 * scale) / 2}px`);
+  root.setProperty('--w', `${layout.w}px`);
+  root.setProperty('--x', `${(vw - layout.w * scale) / 2}px`);
   root.setProperty('--y', `${offsetY}px`);
   root.setProperty('--h', `${stageH}px`);
   $('sizer').style.height = `${offsetY * 2 + stageH * scale}px`;
   viewer?.setStageScale(scale);
 }
 addEventListener('resize', fit);
-fit();
 
 // ---------------------------------------------------------------------------
 // 画面の切り替え
@@ -132,20 +166,32 @@ onEnter($('place'), toFeeling);
 
 // --- 5. 気持ち：一本の線。離した時点で描き終わり ---
 // 線は絵としてだけでなく、時刻つきの点の列として残す（描き方から気持ちを読むため）
-{
-  const g = pad.getContext('2d');
-  g.lineWidth = 3;
-  g.lineCap = g.lineJoin = 'round';
-  g.strokeStyle = '#000';
+const padG = pad.getContext('2d');
+let padUnit = 1;          // 線の点の1単位に当たるキャンバスの px
+let drawing = null;       // 描いている途中の点の列
 
-  let current = null;
+// 描く前なら、キャンバスを今の画面の組み方の大きさにする（大きさを変えると描いたものは消える）
+function setupPad() {
+  if (drawing || strokes.length) return;
+  const { w, h, unit } = layout.pad;
+  pad.width = w;
+  pad.height = h;
+  padUnit = unit;
+  padG.lineWidth = 3 * unit;
+  padG.lineCap = padG.lineJoin = 'round';
+  padG.strokeStyle = '#000';
+}
+
+{
+  const g = padG;
   let done = false;
 
+  // 記録する点は padUnit で割った単位。描くときはキャンバスの px に戻す
   const point = (e) => {
     const r = pad.getBoundingClientRect();
     return {
-      x: (e.clientX - r.left) * (pad.width / r.width),
-      y: (e.clientY - r.top) * (pad.height / r.height),
+      x: (e.clientX - r.left) * (pad.width / r.width) / padUnit,
+      y: (e.clientY - r.top) * (pad.height / r.height) / padUnit,
       t: e.timeStamp,
     };
   };
@@ -153,28 +199,28 @@ onEnter($('place'), toFeeling);
   pad.addEventListener('pointerdown', (e) => {
     if (done) return;
     pad.setPointerCapture(e.pointerId);
-    current = [point(e)];
+    drawing = [point(e)];
   });
 
   pad.addEventListener('pointermove', (e) => {
-    if (!current) return;
+    if (!drawing) return;
     // 速く動かしたときの途中の点も拾う
     const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
     for (const ev of events.length ? events : [e]) {
       const p = point(ev);
-      const last = current.at(-1);
+      const last = drawing.at(-1);
       g.beginPath();
-      g.moveTo(last.x, last.y);
-      g.lineTo(p.x, p.y);
+      g.moveTo(last.x * padUnit, last.y * padUnit);
+      g.lineTo(p.x * padUnit, p.y * padUnit);
       g.stroke();
-      current.push(p);
+      drawing.push(p);
     }
   });
 
   const end = () => {
-    if (!current) return;
-    const pts = current;
-    current = null;
+    if (!drawing) return;
+    const pts = drawing;
+    drawing = null;
     let length = 0;
     for (let i = 1; i < pts.length; i++) length += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
     if (length < MIN_STROKE) {
@@ -213,6 +259,7 @@ let ready = null;   // モデルの読み込みが終わったら解決する
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function generate() {
+  finished = false;
   await ready;
   await wait(FADE_MS);   // 前の画面が消えるのを待ってから始める（最初の「名前」が見えるように）
 
@@ -221,7 +268,7 @@ async function generate() {
     photo,
     drawing: pad,
     strokes,
-    padW: pad.width,
+    padW: pad.width / padUnit,
     name: $('name').value,
     place: $('place').value,
   });
@@ -254,8 +301,52 @@ async function generate() {
   // 4. 完成：斜めの角度へ回って全体が見える
   await frames(TIMING.finishTurn, (t) => viewer.setToFinal(easeInOut(t)));
 
+  finished = true;
   await saveCurrent();
 }
+
+// ---------------------------------------------------------------------------
+// 印刷：print your memory.
+// ---------------------------------------------------------------------------
+
+// 真上から見たソール：グラフィックをソールの輪郭で切り抜く
+// グラフィックのキャンバスはソールの外接矩形そのもの（上がつま先、左右は真上から見たまま）
+function drawFlatSole(canvas) {
+  const k = 2;   // 輪郭の縁がなめらかに刷れるよう、倍の細かさで描く
+  const src = graphic.canvas;
+  canvas.width = src.width * k;
+  canvas.height = src.height * k;
+  const g = canvas.getContext('2d');
+  g.clearRect(0, 0, canvas.width, canvas.height);
+  g.save();
+  g.beginPath();
+  soleOutline.forEach(([u, v], i) => g[i ? 'lineTo' : 'moveTo'](u * canvas.width, (1 - v) * canvas.height));
+  g.closePath();
+  g.clip();
+  g.drawImage(src, 0, 0, canvas.width, canvas.height);
+  g.restore();
+}
+
+async function printSheet() {
+  if (!finished) return;
+
+  const lengthMm = (shoeSize() + TOE_ROOM_CM) * 10;
+  const sole = $('sheet-sole');
+  drawFlatSole(sole);
+  sole.style.height = `${lengthMm * SHEET_UNITS_PER_MM}px`;
+  sole.style.width = `${(lengthMm / soleAspect) * SHEET_UNITS_PER_MM}px`;
+
+  $('sheet').classList.toggle('landscape', isLandscape(photo));
+  $('sheet-name').textContent = $('name').value.trim();
+  $('sheet-place').textContent = $('place').value.trim();
+  $('sheet-picture').src = photo.src;
+  $('sheet-stroke').src = pad.toDataURL();
+  await Promise.all([$('sheet-picture').decode(), $('sheet-stroke').decode()]);
+
+  print();
+}
+
+$('print').addEventListener('click', printSheet);
 
 // ---------------------------------------------------------------------------
 // 保存と、ほかの人のソール
@@ -297,6 +388,20 @@ async function saveCurrent() {
 }
 
 // Other's sole.：home の下にほかの人のソールを並べ、そこまでスクロールする
+let galleryWorks = [];
+
+// カードの位置とページの長さ（画面の組み方が変わったときも並べ直す）
+function layoutGallery() {
+  const G = layout.gallery;
+  const cols = G.left.length;
+  [...$('gallery').children].forEach((card, i) => {
+    card.style.left = `${G.left[i % cols]}px`;
+    card.style.top = `${G.top + Math.floor(i / cols) * G.row}px`;
+  });
+  const rows = Math.ceil(galleryWorks.length / cols);
+  stageH = G.top + (rows - 1) * G.row + G.cardHeight + G.bottom;
+}
+
 async function openGallery() {
   let works = [];
   try {
@@ -307,10 +412,8 @@ async function openGallery() {
 
   const gallery = $('gallery');
   gallery.replaceChildren();
-  works.forEach((w, i) => {
+  works.forEach((w) => {
     const card = $('card').content.firstElementChild.cloneNode(true);
-    card.style.left = `${GALLERY.left[i % 2]}px`;
-    card.style.top = `${GALLERY.top + Math.floor(i / 2) * GALLERY.row}px`;
     card.querySelector('.panel').classList.toggle('landscape', w.landscape);
     card.querySelector('.sole-image').src = w.sole;
     card.querySelector('.v-name').textContent = w.name;
@@ -319,13 +422,13 @@ async function openGallery() {
     card.querySelector('.v-stroke').src = w.stroke;
     gallery.append(card);
   });
+  galleryWorks = works;
   if (!works.length) return;
 
-  const rows = Math.ceil(works.length / 2);
-  stageH = GALLERY.top + (rows - 1) * GALLERY.row + GALLERY.cardHeight + GALLERY.bottom;
+  layoutGallery();
   document.documentElement.classList.add('scrollable');
   fit();
-  window.scrollTo({ top: offsetY + (GALLERY.top - 80) * scale, behavior: 'smooth' });
+  window.scrollTo({ top: offsetY + (layout.gallery.top - 80) * scale, behavior: 'smooth' });
 }
 
 $('others').addEventListener('click', openGallery);
@@ -333,11 +436,14 @@ $('others').addEventListener('click', openGallery);
 // ---------------------------------------------------------------------------
 // 起動
 // ---------------------------------------------------------------------------
+fit();
 go('name');
 
 ready = (async () => {
   const uv = await (await fetch(UV)).json();
   modelLengthCm = uv.sole_length_m * 100;
+  soleAspect = uv.aspect_length_per_width;
+  soleOutline = uv.outline_uv;
   const W = Math.round(CANVAS_H / uv.aspect_length_per_width);
   graphic = new SoleGraphic(W, CANVAS_H, (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }));
 
