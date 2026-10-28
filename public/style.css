@@ -1,8 +1,8 @@
 /*
   書体は FONTPLUS（index.html のスクリプト）の Neue Haas Grotesk を使う。Figma の書体との対応：
     35 Thin           → Display Pro 35 XLight（NHaasGroteskDSPro-35XLt）
-    55 Roman          → Text Pro 55 Roman（NHaasGroteskTXPro-55Rg）※ Display の 55 はプロジェクトにないため
-    66 Medium Italic  → Text Pro 66 Medium Italic（NHaasGroteskTXPro-66MdIt）
+    55 Roman          → Display Pro 55 Roman（NHaasGroteskDSPro-55Rg）
+    66 Medium Italic  → Display Pro 66 Medium Italic（NHaasGroteskDSPro-66MdIt）
   FONTPLUS が読み込めないときは、Commercial Type の Trial 版（Haas Grot Disp R Trial）が
   手元にインストールされていればそれを使う（local。規約上 Web には置けないので fonts/ は手元での確認用）。
   どちらも日本語を持たないので、日本語はヒラギノ角ゴシック（細い太さ）で表示される。
@@ -33,9 +33,9 @@
 
 :root {
   --font-local: "Haas Grot Disp R Trial", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", "Helvetica Neue", sans-serif;
-  --font: "NHaasGroteskTXPro-55Rg", var(--font-local);                  /* 55 Roman */
+  --font: "NHaasGroteskDSPro-55Rg", var(--font-local);                  /* 55 Roman */
   --font-thin: "NHaasGroteskDSPro-35XLt", var(--font-local);            /* 35 Thin */
-  --font-medium-italic: "NHaasGroteskTXPro-66MdIt", var(--font-local);  /* 66 Medium Italic */
+  --font-medium-italic: "NHaasGroteskDSPro-66MdIt", var(--font-local);  /* 66 Medium Italic */
   --s: 1;   /* 画面全体の倍率（app.js がウィンドウに合わせて決める。--x / --y / --h も） */
 }
 
