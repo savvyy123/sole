@@ -1,7 +1,11 @@
 /*
-  書体は Commercial Type の Trial 版（Haas Grot Disp R Trial）。規約上 Web に置けないので、
-  手元にインストールされていればそれを使い（local）、fonts/ は手元での確認用。
-  この書体は日本語を持たないので、日本語はヒラギノ角ゴシック（細い太さ）で表示される。
+  書体は FONTPLUS（index.html のスクリプト）の Neue Haas Grotesk を使う。Figma の書体との対応：
+    35 Thin           → Display Pro 35 XLight（NHaasGroteskDSPro-35XLt）
+    55 Roman          → Text Pro 55 Roman（NHaasGroteskTXPro-55Rg）※ Display の 55 はプロジェクトにないため
+    66 Medium Italic  → Text Pro 66 Medium Italic（NHaasGroteskTXPro-66MdIt）
+  FONTPLUS が読み込めないときは、Commercial Type の Trial 版（Haas Grot Disp R Trial）が
+  手元にインストールされていればそれを使う（local。規約上 Web には置けないので fonts/ は手元での確認用）。
+  どちらも日本語を持たないので、日本語はヒラギノ角ゴシック（細い太さ）で表示される。
 */
 @font-face {
   font-family: "Haas Grot Disp R Trial";
@@ -28,7 +32,10 @@
 }
 
 :root {
-  --font: "Haas Grot Disp R Trial", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", "Helvetica Neue", sans-serif;
+  --font-local: "Haas Grot Disp R Trial", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", "Helvetica Neue", sans-serif;
+  --font: "NHaasGroteskTXPro-55Rg", var(--font-local);                  /* 55 Roman */
+  --font-thin: "NHaasGroteskDSPro-35XLt", var(--font-local);            /* 35 Thin */
+  --font-medium-italic: "NHaasGroteskTXPro-66MdIt", var(--font-local);  /* 66 Medium Italic */
   --s: 1;   /* 画面全体の倍率（app.js がウィンドウに合わせて決める。--x / --y / --h も） */
 }
 
@@ -94,6 +101,7 @@ html.scrollable body {
 
 .ja {
   font-size: 64px;
+  font-family: var(--font-thin);
   font-weight: 200;      /* 35 Thin */
   letter-spacing: 32px;
 }
@@ -107,15 +115,30 @@ html.scrollable body {
   font-weight: 400;      /* 55 Roman */
 }
 
-/* 画面ごとの文字の位置（Figma の値） */
-[data-screen="name"] .ja    { left: 575px; top: 480px; }
-[data-screen="name"] .en    { left: 826px; top: 612px; }
-[data-screen="size"] .ja    { left: 462px; top: 480px; }
-[data-screen="size"] .en    { left: 774px; top: 612px; }
-[data-screen="photo"] .ja   { left: 498px; top: 380px; }
-[data-screen="photo"] .en   { left: 555px; top: 604px; }
-[data-screen="place"] .ja   { left: 258px; top: 480px; }
-[data-screen="place"] .en   { left: 742px; top: 612px; }
+/* 画面ごとの文字の位置（Figma の値）
+   中央に並ぶ文字は、left を Figma での文字の中心にして、そこを中心に置く。
+   書体が手元にない端末では代わりの書体になり幅が変わるので、左端で合わせると中央からずれるため。
+   字送り（letter-spacing）は最後の文字の後ろにも付くので、同じ幅を左にも足して釣り合わせる */
+[data-screen="name"] .ja,  [data-screen="name"] .en,
+[data-screen="size"] .ja,  [data-screen="size"] .en,
+[data-screen="photo"] .ja, [data-screen="photo"] .en,
+[data-screen="place"] .ja, [data-screen="place"] .en {
+  transform: translateX(-50%);
+}
+
+[data-screen="name"] .ja, [data-screen="size"] .ja,
+[data-screen="photo"] .ja, [data-screen="place"] .ja {
+  padding-left: 32px;    /* .ja の字送り */
+}
+
+[data-screen="name"] .ja    { left: 943px; top: 480px; }     /* 575 + 736 / 2 */
+[data-screen="name"] .en    { left: 938px; top: 612px; }     /* 826 + 224 / 2 */
+[data-screen="size"] .ja    { left: 973.5px; top: 480px; }   /* 462 + 1023 / 2 */
+[data-screen="size"] .en    { left: 921px; top: 612px; }     /* 774 + 294 / 2 */
+[data-screen="photo"] .ja   { left: 959.5px; top: 380px; }   /* 498 + 923 / 2 */
+[data-screen="photo"] .en   { left: 933.5px; top: 604px; }   /* 555 + 757 / 2 */
+[data-screen="place"] .ja   { left: 959.5px; top: 480px; }   /* 258 + 1403 / 2 */
+[data-screen="place"] .en   { left: 933px; top: 612px; }     /* 742 + 382 / 2 */
 [data-screen="feeling"] .ja { left: 70px; top: 97px; }
 [data-screen="feeling"] .en { left: 70px; top: 294px; }
 .copy   { left: 1178px; top: 224px; }
@@ -157,7 +180,7 @@ br.sp { display: none; }
 input.front {
   margin: 0;
   padding: 0 12px;
-  font-family: var(--font);
+  font-family: var(--font-local);   /* FONTPLUS は入力欄に使えない */
   font-size: 24px;
   font-weight: 200;      /* 35 Thin */
   letter-spacing: 4.8px;
@@ -175,6 +198,7 @@ button.field { cursor: pointer; }
   left: 43px;            /* Figma: 805 - 762 */
   top: 26px;             /* Figma: 731 - 705 */
   font-size: 24px;
+  font-family: var(--font-thin);
   font-weight: 200;
   letter-spacing: 12px;
   line-height: normal;
@@ -309,12 +333,15 @@ button.field { cursor: pointer; }
 }
 
 .copy em {
+  font-family: var(--font-medium-italic);
   font-style: italic;
   font-weight: 500;      /* 66 Medium Italic */
+  font-synthesis: none;
 }
 
 .print {
   font-size: 64px;
+  font-family: var(--font-thin);
   font-weight: 200;
   letter-spacing: 32px;
   line-height: 80px;
@@ -328,6 +355,7 @@ button.field { cursor: pointer; }
   color: inherit;
   font-family: var(--font);
   font-size: 40px;
+  font-family: var(--font-thin);
   font-weight: 200;
   letter-spacing: 20px;
   cursor: pointer;
@@ -379,6 +407,7 @@ html.mobile [data-screen="place"] .ja {
 
 html.mobile .en {
   font-size: 16px;
+  font-family: var(--font-thin);
   font-weight: 200;      /* 35 Thin */
 }
 
@@ -389,10 +418,18 @@ html.mobile [data-screen="feeling"] .en {
   white-space: normal;
 }
 
-html.mobile [data-screen="name"] .ja    { left: 105px; top: 256px; }
-html.mobile [data-screen="name"] .en    { left: 138px; top: 330px; }
-html.mobile [data-screen="size"] .ja    { left: 72px; top: 256px; }
-html.mobile [data-screen="size"] .en    { left: 122px; top: 330px; }
+/* 名前とサイズは中央に並べる（left は Figma での文字の中心）。写真と場所は左端で揃える */
+html.mobile [data-screen="name"] .ja,
+html.mobile [data-screen="size"] .ja    { padding-left: 7.5px; }   /* スマホの .ja の字送り */
+html.mobile [data-screen="name"] .ja    { left: 191.25px; top: 256px; }   /* 105 + (8 × 15 + 7 × 7.5) / 2 */
+html.mobile [data-screen="name"] .en    { left: 194px; top: 330px; }      /* 138 + 112 / 2 */
+html.mobile [data-screen="size"] .ja    { left: 192px; top: 256px; }      /* 72 + (11 × 15 + 10 × 7.5) / 2 */
+html.mobile [data-screen="size"] .en    { left: 197px; top: 330px; }      /* 122 + 150 / 2 */
+
+html.mobile [data-screen="photo"] .ja,
+html.mobile [data-screen="photo"] .en,
+html.mobile [data-screen="place"] .ja,
+html.mobile [data-screen="place"] .en   { transform: none; padding-left: 0; }
 html.mobile [data-screen="photo"] .ja   { left: 90px; top: 238px; }
 html.mobile [data-screen="photo"] .en   { left: 90px; top: 311px; }
 html.mobile [data-screen="place"] .ja   { left: 90px; top: 238px; }
@@ -590,8 +627,10 @@ html.mobile .panel.mini {
 }
 
 .sheet-copy em {
+  font-family: var(--font-medium-italic);
   font-style: italic;
   font-weight: 500;      /* 66 Medium Italic */
+  font-synthesis: none;
 }
 
 .sheet-info {

@@ -51,6 +51,9 @@ const TIMING = {
 };
 
 const $ = (id) => document.getElementById(id);
+
+// FONTPLUS はページにある文字だけを届けるので、あとから文字を入れたら読み込み直す
+const refreshFonts = () => window.FONTPLUS?.reload(false);
 const pad = $('pad');
 
 let viewer = null;
@@ -279,6 +282,7 @@ async function generate() {
   // 1. 入力の振り返り：名前、場所の名前、地面の写真、描いた線が、上から順にそれぞれの欄に現れる
   $('out-name').textContent = $('name').value.trim();
   $('out-place').textContent = $('place').value.trim();
+  refreshFonts();
   $('out-picture').src = photo.src;
   // 写真が横長なら、Picture の箱を横長にする（正方形は縦長の箱）
   $('result').classList.toggle('landscape', isLandscape(photo));
@@ -422,6 +426,7 @@ async function openGallery() {
     card.querySelector('.v-stroke').src = w.stroke;
     gallery.append(card);
   });
+  refreshFonts();
   galleryWorks = works;
   if (!works.length) return;
 
