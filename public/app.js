@@ -85,8 +85,8 @@ function fit() {
     if (galleryWorks.length) layoutGallery();
   }
 
-  // PC は画面全体が収まるように、スマホは幅に合わせて（縦は下へスクロール）
-  scale = layout === LAYOUTS.mobile ? vw / layout.w : Math.min(vw / layout.w, vh / layout.h);
+  // 画面全体が収まるように（スクロールするのは、ほかの人のソールを開いたときだけ）
+  scale = Math.min(vw / layout.w, vh / layout.h);
   offsetY = Math.max(0, (vh - layout.h * scale) / 2);
   const root = document.documentElement.style;
   root.setProperty('--s', scale);

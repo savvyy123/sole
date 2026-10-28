@@ -36,6 +36,7 @@ html, body {
   height: 100%;
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;   /* スマホで引っぱったときに画面が弾まないように */
   background: #fff;
   color: #000;
   font-family: var(--font);
@@ -361,16 +362,8 @@ button.field { cursor: pointer; }
 
 /* =========================================================================
    スマホ（Figma の iPhone 14 & 15 Pro：393×852）
-   縦長の画面のとき app.js が html に .mobile を付け、画面の幅に合わせて拡大縮小する
+   縦長の画面のとき app.js が html に .mobile を付け、画面に収まるように拡大縮小する
    ========================================================================= */
-html.mobile {
-  overflow-y: auto;       /* 画面より縦に長いときは下へスクロールできる */
-}
-
-html.mobile body {
-  height: auto;
-  overflow: visible;
-}
 
 html.mobile br.sp { display: inline; }
 
