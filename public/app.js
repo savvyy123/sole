@@ -144,9 +144,12 @@ function cleanSize() {
 }
 $('size').addEventListener('input', (e) => { if (!e.isComposing) cleanSize(); });
 $('size').addEventListener('compositionend', cleanSize);
-onEnter($('size'), () => {
-  if (shoeSize()) go('photo');
-});
+const toPhoto = () => {
+  if (shoeSize() && document.querySelector('.screen.active')?.dataset.screen === 'size') go('photo');
+};
+onEnter($('size'), toPhoto);
+// iPhone の数字のキーボードには Enter がないので、「完了」で入力を終えたとき（change）にも進む
+$('size').addEventListener('change', toPhoto);
 
 // --- 3. 地面の写真：選んだら次へ ---
 $('pick').addEventListener('click', () => $('photo').click());
