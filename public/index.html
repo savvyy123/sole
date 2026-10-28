@@ -26,6 +26,8 @@
 
         <!-- 1. 名前 -->
         <section class="screen" data-screen="name">
+            <p class="copy intro">Make your<br><em>memorial &amp; original</em><br>sole.</p>
+            <button class="others intro-others" id="others-intro" type="button">Other’s sole.</button>
             <h1 class="ja">あなたの名前は？</h1>
             <p class="en">What your name?</p>
             <div class="field">
@@ -36,6 +38,7 @@
 
         <!-- 2. 靴のサイズ -->
         <section class="screen" data-screen="size">
+            <p class="copy intro">Make your<br><em>memorial &amp; original</em><br>sole.</p>
             <h1 class="ja">あなたの靴のサイズは？</h1>
             <p class="en">What is your shoe size?</p>
             <div class="field">
@@ -46,6 +49,7 @@
 
         <!-- 3. 地面の写真 -->
         <section class="screen" data-screen="photo">
+            <p class="copy intro">Make your<br><em>memorial &amp; original</em><br>sole.</p>
             <h1 class="ja two-lines">好きな場所の<br>写真を送ってください</h1>
             <p class="en">Please share a picture of the ground from your favorite place.</p>
             <button class="field" id="pick" type="button">
@@ -57,6 +61,7 @@
 
         <!-- 4. 場所の名前 -->
         <section class="screen" data-screen="place">
+            <p class="copy intro">Make your<br><em>memorial &amp; original</em><br>sole.</p>
             <h1 class="ja">その場所の名前を<br class="sp">教えてください</h1>
             <p class="en">What's the name of this place?</p>
             <div class="field">
@@ -73,9 +78,10 @@
             </div>
             <h1 class="ja two-lines">その時の気持ちを<br>一本の線で描いてください。</h1>
             <p class="en">Feel free to share your thoughts from that moment here.</p>
+            <p class="copy intro">Make your<br><em>memorial &amp; original</em><br>sole.</p>
         </section>
 
-        <!-- 6. 完成（home）。Other's sole. を押すと下にほかの人のソールが並ぶ -->
+        <!-- 6. 完成（home） -->
         <section class="screen" data-screen="home">
             <div class="frame-back"></div>
 
@@ -94,9 +100,10 @@
             <p class="copy">Make your<br><em>memorial &amp;<span class="sp"> </span>original</em><br>sole.</p>
             <button class="print" id="print" type="button"><span class="pc">p</span><span class="sp">P</span>rint your memory.</button>
             <button class="others" id="others" type="button">Other’s sole.</button>
-
-            <div class="gallery" id="gallery"></div>
         </section>
+
+        <!-- ほかの人のソール。Other's sole.（名前の画面と home）を押すと、今の画面の下に並ぶ -->
+        <div class="gallery" id="gallery"></div>
 
         <template id="card">
             <article class="card">

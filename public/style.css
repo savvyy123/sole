@@ -3,6 +3,7 @@
     35 Thin           → Display Pro 35 XLight（NHaasGroteskDSPro-35XLt）
     45 Light          → Display Pro 45 Light（NHaasGroteskDSPro-45Lt）
     55 Roman          → Display Pro 55 Roman（NHaasGroteskDSPro-55Rg）
+    56 Italic         → Display Pro 56 Italic（NHaasGroteskDSPro-56It）
     66 Medium Italic  → Display Pro 66 Medium Italic（NHaasGroteskDSPro-66MdIt）
   FONTPLUS が読み込めないときは、Commercial Type の Trial 版（Haas Grot Disp R Trial）が
   手元にインストールされていればそれを使う（local。規約上 Web には置けないので fonts/ は手元での確認用）。
@@ -34,6 +35,14 @@
 
 @font-face {
   font-family: "Haas Grot Disp R Trial";
+  src: local("HaasGrotDispRTrial-56Italic"),
+       url("fonts/NeueHaasGrotDispRound-56Italic-Trial.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Haas Grot Disp R Trial";
   src: local("HaasGrotDispRTrial-66MediumIt"),
        url("fonts/NeueHaasGrotDispRound-66MediumItalic-Trial.otf") format("opentype");
   font-weight: 500;
@@ -45,6 +54,7 @@
   --font: "NHaasGroteskDSPro-55Rg", var(--font-local);                  /* 55 Roman */
   --font-thin: "NHaasGroteskDSPro-35XLt", var(--font-local);            /* 35 Thin */
   --font-light: "NHaasGroteskDSPro-45Lt", var(--font-local);            /* 45 Light */
+  --font-italic: "NHaasGroteskDSPro-56It", var(--font-local);           /* 56 Italic */
   --font-medium-italic: "NHaasGroteskDSPro-66MdIt", var(--font-local);  /* 66 Medium Italic */
   --s: 1;   /* 画面全体の倍率（app.js がウィンドウに合わせて決める。--x / --y / --h も） */
 }
@@ -158,6 +168,10 @@ html.scrollable body {
 .print  { left: 911px; top: 918px; }
 .others { left: 147px; top: 942px; }
 
+/* 入力の画面にも置く Make your memorial & original sole.（線の画面では描く面の右下） */
+.copy.intro { left: 60px; top: 43px; }
+[data-screen="feeling"] .copy { left: 1323px; top: 751px; }
+
 /* スマホでだけ出す文字（.sp）と、PC でだけ出す文字（.pc）。Figma の PC 版とスマホ版で文言が少し違うところ */
 .sp { display: none; }
 
@@ -241,7 +255,8 @@ button.field { cursor: pointer; }
 }
 
 [data-screen="feeling"] .ja,
-[data-screen="feeling"] .en {
+[data-screen="feeling"] .en,
+[data-screen="feeling"] .copy {
   pointer-events: none;  /* 文字の上からでも描ける */
 }
 
@@ -366,12 +381,25 @@ button.field { cursor: pointer; }
   border: 0;
   background: none;
   color: inherit;
-  font-family: var(--font);
-  font-size: 40px;
-  font-family: var(--font-thin);
-  font-weight: 200;
-  letter-spacing: 20px;
   cursor: pointer;
+}
+
+/* Other's sole.：56 Italic（書体そのものが斜体なので、ブラウザーがさらに斜めにしないように） */
+.others {
+  font-size: 40px;
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-weight: 400;
+  font-synthesis: none;
+  letter-spacing: 12px;
+}
+
+/* 名前の画面の右上 */
+.intro-others {
+  left: 1528px;
+  top: 90px;
+  font-size: 30px;
+  letter-spacing: 15px;
 }
 
 /* --- ほかの人のソール（Figma の展開したページ） --- */
@@ -511,8 +539,17 @@ html.mobile .others {
   left: 26px;
   top: 121px;
   font-size: 16px;
-  letter-spacing: 8px;
+  letter-spacing: 4.8px;
 }
+
+html.mobile .intro-others {
+  left: 272px;
+  top: 28px;
+  font-size: 10px;
+  letter-spacing: 3px;
+}
+
+html.mobile [data-screen="feeling"] .copy { left: 147px; top: 743px; }
 
 html.mobile .print {
   left: 168px;

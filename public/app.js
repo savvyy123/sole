@@ -106,6 +106,7 @@ addEventListener('resize', fit);
 // 画面の切り替え
 // ---------------------------------------------------------------------------
 function go(name) {
+  closeGallery();
   for (const el of document.querySelectorAll('.screen')) {
     el.classList.toggle('active', el.dataset.screen === name);
   }
@@ -394,7 +395,7 @@ async function saveCurrent() {
   }
 }
 
-// Other's sole.：home の下にほかの人のソールを並べ、そこまでスクロールする
+// Other's sole.：今の画面（名前の画面か home）の下にほかの人のソールを並べ、そこまでスクロールする
 let galleryWorks = [];
 
 // カードの位置とページの長さ（画面の組み方が変わったときも並べ直す）
@@ -439,7 +440,19 @@ async function openGallery() {
   window.scrollTo({ top: offsetY + (layout.gallery.top - 80) * scale, behavior: 'smooth' });
 }
 
+// 次の画面へ進むときは閉じて、ページの長さを1画面に戻す
+function closeGallery() {
+  if (!galleryWorks.length) return;
+  galleryWorks = [];
+  $('gallery').replaceChildren();
+  stageH = layout.h;
+  document.documentElement.classList.remove('scrollable');
+  window.scrollTo(0, 0);
+  fit();
+}
+
 $('others').addEventListener('click', openGallery);
+$('others-intro').addEventListener('click', openGallery);
 
 // ---------------------------------------------------------------------------
 // 起動
