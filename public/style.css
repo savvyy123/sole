@@ -516,7 +516,7 @@ html.mobile [data-screen="place"] .en   { left: 90px; top: 311px; }
 html.mobile [data-screen="feeling"] .ja { left: 27px; top: 63px; }
 html.mobile [data-screen="feeling"] .en { left: 27px; top: 120px; }
 
-/* 入力欄とボタン：0.5px の線の箱（180.5×40.5）を 6, 7 ずらして重ねる */
+/* 入力欄とボタン：1px の線の箱（180.5×40.5）を 6, 7 ずらして重ねる */
 html.mobile .field {
   left: 104px;
   top: 402px;
@@ -533,7 +533,7 @@ html.mobile .field .back,
 html.mobile .field .front {
   width: 180.5px;
   height: 40.5px;
-  border-width: 0.5px;
+  border-width: 1px;
 }
 
 html.mobile .field .back { left: 6px; top: 7px; }
@@ -557,7 +557,7 @@ html.mobile .board-back,
 html.mobile .board-front {
   width: 315px;
   height: 600px;
-  border-width: 0.5px;
+  border-width: 1px;
 }
 
 html.mobile .board-back  { left: 48px; top: 221px; }
@@ -586,7 +586,7 @@ html.mobile .intro-others {
   letter-spacing: 3px;
 }
 
-html.mobile [data-screen="feeling"] .copy { left: 147px; top: 743px; }
+html.mobile [data-screen="feeling"] .copy { left: 141px; top: 737px; }
 
 /* ロード画面：スマホ用の Figma がまだないので、PC の並びを 16px に縮めて、見えている高さの真ん中に置く（仮）。
    文字のまとまりは高さ 102px（Make your の上端から、靴底と思い出の下端まで） */
@@ -614,7 +614,7 @@ html.mobile .frame-back,
 html.mobile .panel {
   width: 315px;
   height: 600px;
-  border-width: 0.5px;
+  border-width: 1px;
 }
 
 html.mobile .frame-back { left: 48px; top: 221px; }
@@ -623,8 +623,8 @@ html.mobile .panel      { left: 27px; top: 200px; }
 /* 枠の中の位置は Figma の値から枠の位置（線の内側 27.5, 200.5）を引いたもの */
 html.mobile .sole-view,
 html.mobile .sole-image {
-  left: 49.5px;
-  top: 15.5px;
+  left: 49px;
+  top: 15px;
   width: 200px;
   height: 300px;
 }
@@ -635,36 +635,36 @@ html.mobile .info {
 }
 
 /* 縦長の写真のとき（Figma の iPhone - 7） */
-html.mobile .info-name    { left: 17.5px; top: 324.5px; }
-html.mobile .info-place   { left: 17.5px; top: 346.5px; }
-html.mobile .info-size    { left: 17.5px; top: 370.5px; }
-html.mobile .info-picture { left: 17.5px; top: 394.5px; }
-html.mobile .info-stroke  { left: 17.5px; top: 509.5px; }
+html.mobile .info-name    { left: 17px; top: 324px; }
+html.mobile .info-place   { left: 17px; top: 346px; }
+html.mobile .info-size    { left: 17px; top: 370px; }
+html.mobile .info-picture { left: 17px; top: 394px; }
+html.mobile .info-stroke  { left: 17px; top: 509px; }
 
 /* 横長の写真のとき（Figma の iPhone - 6） */
-html.mobile .landscape .info-name    { left: 17.5px; top: 320.5px; }
-html.mobile .landscape .info-place   { left: 17.5px; top: 343.5px; }
-html.mobile .landscape .info-size    { left: 17.5px; top: 366.5px; }
-html.mobile .landscape .info-picture { left: 17.5px; top: 393.5px; }
+html.mobile .landscape .info-name    { left: 17px; top: 320px; }
+html.mobile .landscape .info-place   { left: 17px; top: 343px; }
+html.mobile .landscape .info-size    { left: 17px; top: 366px; }
+html.mobile .landscape .info-picture { left: 17px; top: 393px; }
 
 /* 縦長の写真のとき */
 html.mobile .out-picture {
-  left: 89.5px;
-  top: 394.5px;
+  left: 89px;
+  top: 394px;
   width: 83px;
   height: 110px;
 }
 
 /* 横長の写真のとき */
 html.mobile .landscape .out-picture {
-  top: 393.5px;
+  top: 393px;
   width: 150px;
   height: 112px;
 }
 
 html.mobile .out-stroke {
-  left: 89.5px;
-  top: 509.5px;
+  left: 89px;
+  top: 509px;
   width: 120px;
   height: 80px;
 }
@@ -680,7 +680,7 @@ html.mobile .card-back {
   top: 21px;
   width: 315px;
   height: 600px;
-  border-width: 0.5px;
+  border-width: 1px;
 }
 
 html.mobile .panel.mini {
