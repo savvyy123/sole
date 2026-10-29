@@ -43,7 +43,7 @@ const LAYOUTS = {
 const FADE_MS = 400;
 document.documentElement.style.setProperty('--fade', `${FADE_MS}ms`);
 
-const GALLERY_SCROLL_MS = 1600;   // Other's sole. を押してから、一覧まで下りるのにかける時間
+const GALLERY_SCROLL_MS = 1200;   // Other's sole. を押してから、一覧まで下りるのにかける時間
 const MIN_STROKE = 120;           // これより短い線は、うっかり触れたものとして描き直しにする（px）
 const AFTER_STROKE_MS = 600;      // 描き終えてから home へ進むまで
 
