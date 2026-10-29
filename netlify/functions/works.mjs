@@ -1,7 +1,7 @@
 // memorial sole の記録（Netlify Functions 版。手元では server.mjs が同じことをする）
 //   POST /works            … 1足ぶん保存する → { id }
 //   GET  /works            … 新しい順の一覧（画像は URL だけ）
-//   GET  /works/:id/:kind  … 画像（sole / picture / stroke）
+//   GET  /works/:id/:kind  … 画像（sole / picture / stroke / flat）
 //
 // 保存先は Netlify Blobs。1足を1件として、別々のキーに保存する
 // （1つにまとめると、同時に保存した人どうしの書き込みがぶつかるため。numberspace と同じ）。
@@ -26,6 +26,7 @@ const withUrls = (w) => ({
   sole: `/works/${w.id}/sole`,
   picture: `/works/${w.id}/picture`,
   stroke: `/works/${w.id}/stroke`,
+  flat: w.flat ? `/works/${w.id}/flat` : null,   // 真上から見たソール。足す前の記録にはない
 });
 
 // store を外から渡せるようにしておく（Netlify の外でも動作を確かめられるように）
@@ -78,6 +79,7 @@ export async function handle(req, store, params = {}) {
       energy: w.energy,
       jagged: w.jagged,
       strokePoints: w.points,
+      flat: "flat" in w.images,
       createdAt: new Date(now).toISOString(),
     }, { onlyIfNew: true });
 

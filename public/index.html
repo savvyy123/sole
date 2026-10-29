@@ -24,6 +24,12 @@
          縦長の画面（スマホ）では Figma の iPhone 用（393×852）に切り替え、幅に合わせる -->
     <div class="stage" id="stage">
 
+        <!-- 0. ロード画面：文字がフェードイン・アウトを繰り返し、読み込みが済んだら名前の画面へ -->
+        <section class="screen" data-screen="load">
+            <p class="copy">Make your<br><em>memorial &amp; original</em><br>sole.</p>
+            <p class="load-ja">思い出と靴底</p>
+        </section>
+
         <!-- 1. 名前 -->
         <section class="screen" data-screen="name">
             <p class="copy intro">Make your<br><em>memorial &amp; original</em><br>sole.</p>
@@ -91,6 +97,7 @@
                 <!-- 入力の振り返り：完成までのアニメーションの最初に、上から順に現れる -->
                 <p class="info info-name reveal">Name   :  <span id="out-name"></span></p>
                 <p class="info info-place reveal">Place   :  <span id="out-place"></span></p>
+                <p class="info info-size reveal">Size     :  <span id="out-size"></span></p>
                 <p class="info info-picture reveal">Picture:</p>
                 <img class="out-picture reveal" id="out-picture" alt="">
                 <p class="info info-stroke reveal">Stroke<span class="sp"> </span>:</p>
@@ -112,6 +119,7 @@
                     <img class="sole-image" alt="">
                     <p class="info info-name">Name   :  <span class="v-name"></span></p>
                     <p class="info info-place">Place   :  <span class="v-place"></span></p>
+                    <p class="info info-size">Size     :  <span class="v-size"></span></p>
                     <p class="info info-picture">Picture:</p>
                     <img class="out-picture v-picture" alt="">
                     <p class="info info-stroke">Stroke<span class="sp"> </span>:</p>
@@ -131,6 +139,7 @@
             <p class="sheet-copy">Make your<br><em>memorial &amp;original</em><br>sole.</p>
             <p class="sheet-info sheet-name">Name   :  <span id="sheet-name"></span></p>
             <p class="sheet-info sheet-place">Place   :  <span id="sheet-place"></span></p>
+            <p class="sheet-info sheet-size">Size     :  <span id="sheet-size"></span></p>
             <p class="sheet-info sheet-picture">Picture:</p>
             <img class="sheet-out-picture" id="sheet-picture" alt="">
             <p class="sheet-info sheet-stroke">Stroke:</p>

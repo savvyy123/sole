@@ -286,6 +286,7 @@ async function generate() {
   // 1. 入力の振り返り：名前、場所の名前、地面の写真、描いた線が、上から順にそれぞれの欄に現れる
   $('out-name').textContent = $('name').value.trim();
   $('out-place').textContent = $('place').value.trim();
+  $('out-size').textContent = shoeSize();
   refreshFonts();
   $('out-picture').src = photo.src;
   // 写真が横長なら、Picture の箱を横長にする（正方形は縦長の箱）
@@ -319,9 +320,8 @@ async function generate() {
 
 // 真上から見たソール：グラフィックをソールの輪郭で切り抜く
 // グラフィックのキャンバスはソールの外接矩形そのもの（上がつま先、左右は真上から見たまま）
-function drawFlatSole(canvas) {
+function drawFlatSole(canvas, src) {
   const k = 2;   // 輪郭の縁がなめらかに刷れるよう、倍の細かさで描く
-  const src = graphic.canvas;
   canvas.width = src.width * k;
   canvas.height = src.height * k;
   const g = canvas.getContext('2d');
@@ -335,23 +335,35 @@ function drawFlatSole(canvas) {
   g.restore();
 }
 
-async function printSheet() {
-  if (!finished) return;
-
-  const lengthMm = (shoeSize() + TOE_ROOM_CM) * 10;
+// 1足ぶんを印刷用の紙に入れて刷る。src は真上から見たソールのグラフィック、picture は写真の img
+async function printSole({ src, size, name, place, picture, stroke }) {
+  const lengthMm = (size + TOE_ROOM_CM) * 10;
   const sole = $('sheet-sole');
-  drawFlatSole(sole);
+  drawFlatSole(sole, src);
   sole.style.height = `${lengthMm * SHEET_UNITS_PER_MM}px`;
   sole.style.width = `${(lengthMm / soleAspect) * SHEET_UNITS_PER_MM}px`;
 
-  $('sheet').classList.toggle('landscape', isLandscape(photo));
-  $('sheet-name').textContent = $('name').value.trim();
-  $('sheet-place').textContent = $('place').value.trim();
-  $('sheet-picture').src = photo.src;
-  $('sheet-stroke').src = pad.toDataURL();
+  $('sheet').classList.toggle('landscape', isLandscape(picture));
+  $('sheet-name').textContent = name;
+  $('sheet-place').textContent = place;
+  $('sheet-size').textContent = size;
+  $('sheet-picture').src = picture.src;
+  $('sheet-stroke').src = stroke;
   await Promise.all([$('sheet-picture').decode(), $('sheet-stroke').decode()]);
 
   print();
+}
+
+function printSheet() {
+  if (!finished) return;
+  printSole({
+    src: graphic.canvas,
+    size: shoeSize(),
+    name: $('name').value.trim(),
+    place: $('place').value.trim(),
+    picture: photo,
+    stroke: pad.toDataURL(),
+  });
 }
 
 $('print').addEventListener('click', printSheet);
@@ -386,6 +398,7 @@ async function saveCurrent() {
     sole: viewer.snapshot(),
     picture: thumbnail(photo, 1600),   // 縮めて描き直すので、写真の位置情報（GPS）は残らない
     stroke: pad.toDataURL(),
+    flat: graphic.canvas.toDataURL('image/jpeg', 0.92),   // 真上から見たソール（ほかの人が印刷するときに使う）
     strokePoints: strokes.map(packStroke),
   };
   try {
@@ -397,6 +410,28 @@ async function saveCurrent() {
 
 // Other's sole.：今の画面（名前の画面か home）の下にほかの人のソールを並べ、そこまでスクロールする
 let galleryWorks = [];
+
+// カードは画面に入ったものから現れる。同時に入ったものは上から順に1フレームずつずらして始める
+const showQueue = [];
+let showing = false;
+const cardObserver = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    cardObserver.unobserve(e.target);
+    showQueue.push(e.target);
+  }
+  if (showQueue.length && !showing) {
+    showing = true;
+    requestAnimationFrame(showNext);
+  }
+});
+
+function showNext() {
+  const card = showQueue.shift();
+  if (card) card.dataset.show = '';
+  if (showQueue.length) requestAnimationFrame(showNext);
+  else showing = false;
+}
 
 // カードの位置とページの長さ（画面の組み方が変わったときも並べ直す）
 function layoutGallery() {
@@ -419,6 +454,8 @@ async function openGallery() {
   }
 
   const gallery = $('gallery');
+  cardObserver.disconnect();
+  showQueue.length = 0;
   gallery.replaceChildren();
   works.forEach((w) => {
     const card = $('card').content.firstElementChild.cloneNode(true);
@@ -426,8 +463,10 @@ async function openGallery() {
     card.querySelector('.sole-image').src = w.sole;
     card.querySelector('.v-name').textContent = w.name;
     card.querySelector('.v-place').textContent = w.place;
+    card.querySelector('.v-size').textContent = w.shoeSize;
     card.querySelector('.v-picture').src = w.picture;
     card.querySelector('.v-stroke').src = w.stroke;
+    card.addEventListener('click', () => printOther(w));
     gallery.append(card);
   });
   refreshFonts();
@@ -435,15 +474,62 @@ async function openGallery() {
   if (!works.length) return;
 
   layoutGallery();
+  for (const card of gallery.children) cardObserver.observe(card);
   document.documentElement.classList.add('scrollable');
   fit();
   window.scrollTo({ top: offsetY + (layout.gallery.top - 80) * scale, behavior: 'smooth' });
+}
+
+const loadImage = (src) => new Promise((resolve, reject) => {
+  const img = new Image();
+  img.onload = () => resolve(img);
+  img.onerror = reject;
+  img.src = src;
+});
+
+// ほかの人のソールを押すと、その人のソールを印刷する
+let printing = false;
+
+async function printOther(w) {
+  if (printing) return;
+  printing = true;
+  try {
+    const [picture, stroke] = await Promise.all([loadImage(w.picture), loadImage(w.stroke)]);
+    await ready;
+    const src = w.flat ? await loadImage(w.flat) : redraw(w, picture, stroke);
+    await printSole({ src, size: w.shoeSize, name: w.name, place: w.place, picture, stroke: w.stroke });
+  } catch (e) {
+    console.warn('印刷できませんでした', e);
+  } finally {
+    printing = false;
+  }
+}
+
+// 真上から見たソールを保存していない記録は、写真・線・名前と場所から描き直す。
+// 崩れ方はこれらで決まるが、保存した線の点は丸めてあるので、細かいところは元と少し変わる
+function redraw(w, picture, stroke) {
+  const g = new SoleGraphic(graphic.canvas.width, graphic.canvas.height, makeCanvas);
+  // 線の点の単位は、描いた画面（pc / mobile）の描く面で決まる。線の画像の幅から見分ける
+  const unit = Object.values(LAYOUTS).find((L) => L.pad.w === stroke.naturalWidth)?.pad.unit ?? 1;
+  const points = typeof w.strokePoints === 'string' ? JSON.parse(w.strokePoints) : w.strokePoints;
+  g.prepare({
+    photo: picture,
+    drawing: stroke,
+    strokes: (points ?? []).map((pts) => pts.map(([x, y, t]) => ({ x, y, t }))),
+    padW: stroke.naturalWidth / unit,
+    name: w.name,
+    place: w.place,
+  });
+  g.stepTo(g.total);
+  return g.canvas;
 }
 
 // 次の画面へ進むときは閉じて、ページの長さを1画面に戻す
 function closeGallery() {
   if (!galleryWorks.length) return;
   galleryWorks = [];
+  cardObserver.disconnect();
+  showQueue.length = 0;
   $('gallery').replaceChildren();
   stageH = layout.h;
   document.documentElement.classList.remove('scrollable');
@@ -458,7 +544,9 @@ $('others-intro').addEventListener('click', openGallery);
 // 起動
 // ---------------------------------------------------------------------------
 fit();
-go('name');
+go('load');
+
+const makeCanvas = (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h });
 
 ready = (async () => {
   const uv = await (await fetch(UV)).json();
@@ -466,13 +554,20 @@ ready = (async () => {
   soleAspect = uv.aspect_length_per_width;
   soleOutline = uv.outline_uv;
   const W = Math.round(CANVAS_H / uv.aspect_length_per_width);
-  graphic = new SoleGraphic(W, CANVAS_H, (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }));
+  graphic = new SoleGraphic(W, CANVAS_H, makeCanvas);
 
   viewer = new Viewer($('view'));
   fit();
   await viewer.load(MODEL);
   viewer.setTexture(graphic.canvas);
 })();
+
+// ロード画面：読み込みが済んだら、文字が消えきったところ（フェードの1回の終わり）で名前の画面へ。
+// 読み込みが速くても、フェードイン・アウトを1回は見せる
+Promise.allSettled([ready, document.fonts.ready]).then(() => {
+  document.querySelector('[data-screen="load"] .copy')
+    .addEventListener('animationiteration', () => go('name'), { once: true });
+});
 
 ready.catch((e) => {
   console.error(e);

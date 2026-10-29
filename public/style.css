@@ -114,7 +114,7 @@ html.scrollable body {
 /* --- 文字（Figma の値そのまま） --- */
 /* 行の高さは Haas の normal（1.2）に固定する。normal のままだと、日本語を表示するヒラギノの
    高さで行が広がり、Figma より文字が下にずれるため */
-.ja, .en, .copy, .print, .others {
+.ja, .en, .copy, .print, .others, .load-ja {
   position: absolute;
   margin: 0;
   white-space: nowrap;
@@ -167,6 +167,25 @@ html.scrollable body {
 .copy   { left: 1178px; top: 224px; }
 .print  { left: 911px; top: 918px; }
 .others { left: 147px; top: 942px; }
+
+/* ロード画面（Figma の load）。文字がフェードイン・アウトを繰り返す */
+[data-screen="load"] .copy { left: 732px; top: 476px; }
+
+.load-ja {
+  left: 1146px;
+  top: 662px;
+  font-size: 36px;
+  font-family: var(--font-light);
+  font-weight: 300;      /* 45 Light */
+  letter-spacing: 7.2px;
+}
+
+[data-screen="load"] > * { opacity: 0; }
+[data-screen="load"].active > * { animation: breathe 2.4s ease-in-out infinite; }
+
+@keyframes breathe {
+  50% { opacity: 1; }
+}
 
 /* 入力の画面にも置く Make your memorial & original sole.（線の画面では描く面の右下） */
 .copy.intro { left: 60px; top: 43px; }
@@ -311,6 +330,7 @@ button.field { cursor: pointer; }
 /* 縦長の写真のとき */
 .info-name    { left: 358px; top: 116px; }
 .info-place   { left: 359px; top: 139px; }
+.info-size    { left: 359px; top: 162px; }
 .info-picture { left: 359px; top: 223px; }
 .info-stroke  { left: 659px; top: 220px; }
 
@@ -408,9 +428,22 @@ button.field { cursor: pointer; }
   position: absolute;
   width: 780px;
   height: 541px;
+  cursor: pointer;   /* 押すとその人のソールを印刷する */
 }
 
 /* 結果の枠を 757.28 / 900 に縮めたもの。後ろの枠は同じ比率でずらす */
+/* 画面に入るまでは見せず、入ったら下から 25px 上がりながら現れる
+   （参考：toshimasakumagai.com の写真の出方。0.8秒、cubic-bezier(.4, 0, .2, 1)） */
+.card:not([data-show]) { opacity: 0; }
+.card[data-show] { animation: fade-up 800ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+}
+
 .card-back {
   position: absolute;
   left: 22.72px;
@@ -551,6 +584,16 @@ html.mobile .intro-others {
 
 html.mobile [data-screen="feeling"] .copy { left: 147px; top: 743px; }
 
+/* ロード画面：スマホ用の Figma がまだないので、PC の並びを 16px に縮めて真ん中に置く（仮） */
+html.mobile [data-screen="load"] .copy { left: 48.5px; top: 375px; }
+
+html.mobile .load-ja {
+  left: 232.5px;
+  top: 458px;
+  font-size: 16px;
+  letter-spacing: 3.2px;
+}
+
 html.mobile .print {
   left: 168px;
   top: 122px;
@@ -586,6 +629,7 @@ html.mobile .info {
 html.mobile .info-name,
 html.mobile .landscape .info-name    { left: 17.5px; top: 324.5px; }
 html.mobile .info-place              { left: 17.5px; top: 346.5px; }
+html.mobile .info-size               { display: none; }   /* スマホ用の Figma にまだ Size がない */
 html.mobile .info-picture,
 html.mobile .landscape .info-picture { left: 17.5px; top: 372.5px; }
 html.mobile .info-stroke             { left: 17.5px; top: 502.5px; }
@@ -702,18 +746,20 @@ html.mobile .panel.mini {
 /* 縦長の写真のとき（Print-tate） */
 .sheet-name    { left: 359px; top: 177px; }
 .sheet-place   { left: 359px; top: 199px; }
-.sheet-picture { left: 359px; top: 220px; }
-.sheet-out-picture { left: 360px; top: 242px; width: 120px; height: 180px; }
-.sheet-stroke  { left: 360px; top: 429px; }
-.sheet-out-stroke  { left: 360px; top: 451px; width: 180px; height: 120px; }
+.sheet-size    { left: 360px; top: 221px; }
+.sheet-picture { left: 360px; top: 309px; }
+.sheet-out-picture { left: 361px; top: 331px; width: 120px; height: 180px; }
+.sheet-stroke  { left: 361px; top: 518px; }
+.sheet-out-stroke  { left: 361px; top: 540px; width: 180px; height: 120px; }
 
 /* 横長の写真のとき（Print-Yoko） */
 .sheet.landscape .sheet-name    { left: 360px; top: 179px; }
 .sheet.landscape .sheet-place   { left: 360px; top: 202px; }
-.sheet.landscape .sheet-picture { left: 360px; top: 221px; }
-.sheet.landscape .sheet-out-picture { left: 361px; top: 240px; width: 180px; height: 135px; }
-.sheet.landscape .sheet-stroke  { left: 361px; top: 396px; }
-.sheet.landscape .sheet-out-stroke  { left: 361px; top: 415px; width: 180px; height: 120px; }
+.sheet.landscape .sheet-size    { left: 360px; top: 225px; }
+.sheet.landscape .sheet-picture { left: 360px; top: 281px; }
+.sheet.landscape .sheet-out-picture { left: 361px; top: 300px; width: 180px; height: 135px; }
+.sheet.landscape .sheet-stroke  { left: 361px; top: 456px; }
+.sheet.landscape .sheet-out-stroke  { left: 361px; top: 475px; width: 180px; height: 120px; }
 
 @media print {
   html, body {

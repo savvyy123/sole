@@ -18,8 +18,8 @@ app.use(express.static(publicDir));
 // --- 保存 ---
 
 const insertWork = db.prepare(`
-  INSERT INTO works (name, place, shoe_size, landscape, energy, jagged, sole, picture, stroke, stroke_points)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO works (name, place, shoe_size, landscape, energy, jagged, sole, picture, stroke, stroke_points, flat)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 app.post("/works", (req, res) => {
@@ -28,7 +28,7 @@ app.post("/works", (req, res) => {
 
   const { lastInsertRowid } = insertWork.run(
     w.name, w.place, w.shoeSize, w.landscape ? 1 : 0, w.energy, w.jagged,
-    w.images.sole, w.images.picture, w.images.stroke, w.points,
+    w.images.sole, w.images.picture, w.images.stroke, w.points, w.images.flat ?? null,
   );
   res.status(201).json({ id: Number(lastInsertRowid) });
 });
@@ -36,7 +36,7 @@ app.post("/works", (req, res) => {
 // --- 一覧（新しい順）。画像は URL だけ返し、カードがそれぞれ読み込む ---
 
 const listWorks = db.prepare(`
-  SELECT id, name, place, shoe_size, landscape, created_at FROM works ORDER BY id DESC
+  SELECT id, name, place, shoe_size, landscape, stroke_points, flat IS NOT NULL AS has_flat, created_at FROM works ORDER BY id DESC
 `);
 
 app.get("/works", (req, res) => {
@@ -46,10 +46,12 @@ app.get("/works", (req, res) => {
     place: w.place,
     shoeSize: w.shoe_size,
     landscape: w.landscape === 1,
+    strokePoints: w.stroke_points,
     createdAt: w.created_at,
     sole: `/works/${w.id}/sole`,
     picture: `/works/${w.id}/picture`,
     stroke: `/works/${w.id}/stroke`,
+    flat: w.has_flat ? `/works/${w.id}/flat` : null,
   })));
 });
 
@@ -64,7 +66,7 @@ app.get("/works/:id/:kind", (req, res) => {
   const id = Number.parseInt(req.params.id, 10);
   if (!type || !Number.isInteger(id)) return res.sendStatus(404);
   const row = selectImage[req.params.kind].get(id);
-  if (!row) return res.sendStatus(404);
+  if (!row?.data) return res.sendStatus(404);
   res.type(type).set("Cache-Control", "public, max-age=31536000, immutable").send(Buffer.from(row.data));
 });
 
