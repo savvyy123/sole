@@ -31,6 +31,11 @@ const LAYOUTS = {
     // スマホ用の Figma がまだないので仮：home と同じ枠を1列に
     gallery: { top: 900, row: 680, left: [0], cardHeight: 621, bottom: 60 },
     pad: { w: 840, h: 1600, unit: 2 },
+    // スマホのブラウザーで見える高さは 852px より短い（iPhone の Chrome で 663px ほど）。
+    // 下端まで使う画面（tall）だけ全体が入るように縮め、ほかの画面は幅いっぱいに合わせる。
+    // 幅に合わせるときも、入力欄のあたり（minH）までは見えるようにする
+    tall: ['feeling', 'home'],
+    minH: 500,
   },
 };
 
@@ -71,6 +76,7 @@ let myWorkId = null;      // 今作ったソール（ほかの人の一覧から
 // 1920×1080 の画面をウィンドウに合わせて拡大縮小する
 // ほかの人のソールを開くと、画面の高さ（stageH）が伸びて下へスクロールできる
 // ---------------------------------------------------------------------------
+let shownScreen = 'load';   // 倍率を決める画面（切り替えの途中は前の画面のまま）
 let layout = null;        // LAYOUTS の pc か mobile
 let stageH = 1080;
 let scale = 1;
@@ -89,8 +95,10 @@ function fit() {
     if (galleryWorks.length) layoutGallery();
   }
 
-  // 画面全体が収まるように（スクロールするのは、ほかの人のソールを開いたときだけ）
-  scale = Math.min(vw / layout.w, vh / layout.h);
+  // 画面全体が収まるように（スクロールするのは、ほかの人のソールを開いたときだけ）。
+  // スマホの下端まで使わない画面は幅いっぱいに合わせる
+  const fitWidth = layout.tall && !layout.tall.includes(shownScreen);
+  scale = fitWidth ? Math.min(vw / layout.w, vh / layout.minH) : Math.min(vw / layout.w, vh / layout.h);
   offsetY = Math.max(0, (vh - layout.h * scale) / 2);
   const root = document.documentElement.style;
   root.setProperty('--s', scale);
@@ -98,6 +106,7 @@ function fit() {
   root.setProperty('--x', `${(vw - layout.w * scale) / 2}px`);
   root.setProperty('--y', `${offsetY}px`);
   root.setProperty('--h', `${stageH}px`);
+  root.setProperty('--vh', `${vh / scale}px`);   // 見えている高さ（Figma の単位）
   $('sizer').style.height = `${offsetY * 2 + stageH * scale}px`;
   viewer?.setStageScale(scale);
 }
@@ -111,6 +120,11 @@ function go(name) {
   for (const el of document.querySelectorAll('.screen')) {
     el.classList.toggle('active', el.dataset.screen === name);
   }
+  // 画面の倍率は、前の画面が消えきってから（次の画面が現れる前に）変える
+  setTimeout(() => {
+    shownScreen = name;
+    fit();
+  }, FADE_MS);
   // 次の画面は前の画面が消えるまで隠れていて、その間は入力欄にカーソルを置けないので待つ
   const input = document.querySelector(`[data-screen="${name}"] input.front`);
   if (input) setTimeout(() => input.focus(), FADE_MS + 20);
@@ -566,7 +580,6 @@ $('others-intro').addEventListener('click', openGallery);
 // 文字を崩しながらフェードアウトする。サイトの動きとソールの表現をそろえるため
 // ---------------------------------------------------------------------------
 const LOAD_OUT = {
-  cycle: 2400,     // 文字のフェードイン・アウト1回（style.css の breathe と同じ長さ）
   ms: 1800,        // 崩れながら消えきるまで
   steps: 400,      // 帯をずらす回数
   // 帯の幅はキャンバスの幅に対する割合。ずらす幅は PC の 36px の文字に対する px（スマホは文字の大きさに合わせて縮める）
@@ -577,14 +590,8 @@ async function leaveLoad() {
   const screen = document.querySelector('[data-screen="load"]');
   const texts = [...screen.children];
 
-  // 文字がいちばん濃いところ（フェードの1回の真ん中）まで待ち、そこで止める
-  const anims = texts.flatMap((el) => el.getAnimations());
-  const now = anims[0] ? anims[0].currentTime % LOAD_OUT.cycle : LOAD_OUT.cycle / 2;
-  await wait((LOAD_OUT.cycle * 1.5 - now) % LOAD_OUT.cycle);
-  anims.forEach((a) => {
-    a.pause();
-    a.currentTime = LOAD_OUT.cycle / 2;
-  });
+  // 文字がフェードインしきるのを待つ
+  await Promise.all(texts.flatMap((el) => el.getAnimations()).map((a) => a.finished));
 
   // 文字のまわり（崩れてはみ出す分の余白を足す）を、画面と同じ細かさのキャンバスに描き写す
   const rects = texts.map((el) => el.getBoundingClientRect());
@@ -684,9 +691,9 @@ ready = (async () => {
   viewer.setTexture(graphic.canvas);
 })();
 
-// ロード画面：読み込みが済んだら、文字がいちばん濃くなったところで崩しながら消し、名前の画面へ。
-// 読み込みが速くても、フェードインは1回見せる
-Promise.allSettled([ready, document.fonts.ready]).then(leaveLoad);
+// ロード画面：書体が揃ったら、文字がフェードインしきったところで崩しながら消し、名前の画面へ。
+// 3D のモデルは待たない（home で使うときに generate() が待つ）。待つと遅い通信で文字のフェードが何度もくり返されるため
+document.fonts.ready.then(leaveLoad);
 
 ready.catch((e) => {
   console.error(e);

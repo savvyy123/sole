@@ -79,6 +79,7 @@ html, body {
   height: var(--h, 1080px);
   transform: scale(var(--s));
   transform-origin: 0 0;
+  overflow: clip;   /* Figma のフレームと同じく、枠の外は切る（はみ出すとスマホでページが横に広がるため） */
 }
 
 .sizer {
@@ -168,7 +169,7 @@ html.scrollable body {
 .print  { left: 911px; top: 918px; }
 .others { left: 147px; top: 942px; }
 
-/* ロード画面（Figma の load）。文字がフェードイン・アウトを繰り返す（終わるときは app.js が崩しながら消す） */
+/* ロード画面（Figma の load）。文字が1回フェードインし、app.js が崩しながら消す */
 [data-screen="load"] .copy { left: 732px; top: 476px; }
 
 .load-ja {
@@ -181,10 +182,10 @@ html.scrollable body {
 }
 
 [data-screen="load"] > p { opacity: 0; }
-[data-screen="load"].active > p { animation: breathe 2.4s ease-in-out infinite; }
+[data-screen="load"].active > p { animation: load-in 1.2s ease-in-out both; }
 
-@keyframes breathe {
-  50% { opacity: 1; }
+@keyframes load-in {
+  to { opacity: 1; }
 }
 
 /* 入力の画面にも置く Make your memorial & original sole.（線の画面では描く面の右下） */
@@ -587,12 +588,13 @@ html.mobile .intro-others {
 
 html.mobile [data-screen="feeling"] .copy { left: 147px; top: 743px; }
 
-/* ロード画面：スマホ用の Figma がまだないので、PC の並びを 16px に縮めて真ん中に置く（仮） */
-html.mobile [data-screen="load"] .copy { left: 48.5px; top: 375px; }
+/* ロード画面：スマホ用の Figma がまだないので、PC の並びを 16px に縮めて、見えている高さの真ん中に置く（仮）。
+   文字のまとまりは高さ 102px（Make your の上端から、靴底と思い出の下端まで） */
+html.mobile [data-screen="load"] .copy { left: 48.5px; top: calc(var(--vh, 852px) / 2 - 51px); }
 
 html.mobile .load-ja {
   left: 232.5px;
-  top: 458px;
+  top: calc(var(--vh, 852px) / 2 + 32px);
   font-size: 16px;
   letter-spacing: 3.2px;
 }
