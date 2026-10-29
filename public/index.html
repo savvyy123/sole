@@ -27,7 +27,7 @@
         <!-- 0. ロード画面：文字がフェードイン・アウトを繰り返し、読み込みが済んだら名前の画面へ -->
         <section class="screen" data-screen="load">
             <p class="copy">Make your<br><em>memorial &amp; original</em><br>sole.</p>
-            <p class="load-ja">思い出と靴底</p>
+            <p class="load-ja">靴底と思い出</p>
         </section>
 
         <!-- 1. 名前 -->
@@ -97,7 +97,7 @@
                 <!-- 入力の振り返り：完成までのアニメーションの最初に、上から順に現れる -->
                 <p class="info info-name reveal">Name   :  <span id="out-name"></span></p>
                 <p class="info info-place reveal">Place   :  <span id="out-place"></span></p>
-                <p class="info info-size reveal">Size     :  <span id="out-size"></span></p>
+                <p class="info info-size reveal">Size<span class="pc">  </span>   :  <span id="out-size"></span></p>
                 <p class="info info-picture reveal">Picture:</p>
                 <img class="out-picture reveal" id="out-picture" alt="">
                 <p class="info info-stroke reveal">Stroke<span class="sp"> </span>:</p>
@@ -105,7 +105,7 @@
             </div>
 
             <p class="copy">Make your<br><em>memorial &amp;<span class="sp"> </span>original</em><br>sole.</p>
-            <button class="print" id="print" type="button"><span class="pc">p</span><span class="sp">P</span>rint your memory.</button>
+            <button class="print" id="print" type="button">Print your memory.</button>
             <button class="others" id="others" type="button">Other’s sole.</button>
         </section>
 
@@ -119,7 +119,7 @@
                     <img class="sole-image" alt="">
                     <p class="info info-name">Name   :  <span class="v-name"></span></p>
                     <p class="info info-place">Place   :  <span class="v-place"></span></p>
-                    <p class="info info-size">Size     :  <span class="v-size"></span></p>
+                    <p class="info info-size">Size<span class="pc">  </span>   :  <span class="v-size"></span></p>
                     <p class="info info-picture">Picture:</p>
                     <img class="out-picture v-picture" alt="">
                     <p class="info info-stroke">Stroke<span class="sp"> </span>:</p>
@@ -131,7 +131,7 @@
         <p class="message" id="message"></p>
     </div>
 
-    <!-- 印刷用（Figma の Print-tate / Print-Yoko）。画面には出ず、print your memory. で印刷される
+    <!-- 印刷用（Figma の Print-tate / Print-Yoko）。画面には出ず、Print your memory. で印刷される
          Figma の 595×842（A4）を A3 に √2 倍して刷る。左の枠には実寸のソール -->
     <div class="sheet" id="sheet">
         <div class="sheet-layout">

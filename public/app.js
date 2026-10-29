@@ -38,6 +38,7 @@ const LAYOUTS = {
 const FADE_MS = 400;
 document.documentElement.style.setProperty('--fade', `${FADE_MS}ms`);
 
+const GALLERY_SCROLL_MS = 1600;   // Other's sole. を押してから、一覧まで下りるのにかける時間
 const MIN_STROKE = 120;           // これより短い線は、うっかり触れたものとして描き直しにする（px）
 const AFTER_STROKE_MS = 600;      // 描き終えてから home へ進むまで
 
@@ -477,7 +478,26 @@ async function openGallery() {
   for (const card of gallery.children) cardObserver.observe(card);
   document.documentElement.classList.add('scrollable');
   fit();
-  window.scrollTo({ top: offsetY + (layout.gallery.top - 80) * scale, behavior: 'smooth' });
+  scrollSlowly(offsetY + (layout.gallery.top - 80) * scale);
+}
+
+// 一覧までゆっくり下りる（ブラウザーの smooth では速すぎるため）。
+// 途中でホイールや指でスクロールしたら、そこで止めて操作に任せる
+let scrollRun = 0;
+
+function scrollSlowly(to) {
+  const run = ++scrollRun;
+  const from = scrollY;
+  const stop = () => { scrollRun++; };
+  const opts = { once: true, passive: true };
+  addEventListener('wheel', stop, opts);
+  addEventListener('touchstart', stop, opts);
+  frames(GALLERY_SCROLL_MS, (t) => {
+    if (run === scrollRun) window.scrollTo(0, from + (to - from) * easeInOut(t));
+  }).then(() => {
+    removeEventListener('wheel', stop, opts);
+    removeEventListener('touchstart', stop, opts);
+  });
 }
 
 const loadImage = (src) => new Promise((resolve, reject) => {
@@ -532,6 +552,7 @@ function closeGallery() {
   showQueue.length = 0;
   $('gallery').replaceChildren();
   stageH = layout.h;
+  scrollRun++;   // 下りている途中なら止める
   document.documentElement.classList.remove('scrollable');
   window.scrollTo(0, 0);
   fit();
@@ -539,6 +560,107 @@ function closeGallery() {
 
 $('others').addEventListener('click', openGallery);
 $('others-intro').addEventListener('click', openGallery);
+
+// ---------------------------------------------------------------------------
+// ロード画面の終わり方：ソールのグラフィックと同じ処理（縦の帯を切り抜き、少しずらして貼り戻す）で
+// 文字を崩しながらフェードアウトする。サイトの動きとソールの表現をそろえるため
+// ---------------------------------------------------------------------------
+const LOAD_OUT = {
+  cycle: 2400,     // 文字のフェードイン・アウト1回（style.css の breathe と同じ長さ）
+  ms: 1800,        // 崩れながら消えきるまで
+  steps: 400,      // 帯をずらす回数
+  // 帯の幅はキャンバスの幅に対する割合。ずらす幅は PC の 36px の文字に対する px（スマホは文字の大きさに合わせて縮める）
+  params: { stripMin: 0.035, stripMax: 0.05, shiftX: 7, shiftY: 5 },
+};
+
+async function leaveLoad() {
+  const screen = document.querySelector('[data-screen="load"]');
+  const texts = [...screen.children];
+
+  // 文字がいちばん濃いところ（フェードの1回の真ん中）まで待ち、そこで止める
+  const anims = texts.flatMap((el) => el.getAnimations());
+  const now = anims[0] ? anims[0].currentTime % LOAD_OUT.cycle : LOAD_OUT.cycle / 2;
+  await wait((LOAD_OUT.cycle * 1.5 - now) % LOAD_OUT.cycle);
+  anims.forEach((a) => {
+    a.pause();
+    a.currentTime = LOAD_OUT.cycle / 2;
+  });
+
+  // 文字のまわり（崩れてはみ出す分の余白を足す）を、画面と同じ細かさのキャンバスに描き写す
+  const rects = texts.map((el) => el.getBoundingClientRect());
+  const box = {
+    left: Math.min(...rects.map((r) => r.left)),
+    top: Math.min(...rects.map((r) => r.top)),
+    right: Math.max(...rects.map((r) => r.right)),
+    bottom: Math.max(...rects.map((r) => r.bottom)),
+  };
+  const pad = (box.bottom - box.top) * 0.2;
+  box.left -= pad; box.top -= pad; box.right += pad; box.bottom += pad;
+  const k = devicePixelRatio;
+  const src = drawTexts(texts, box, k);
+
+  const u = scale * k * parseFloat(getComputedStyle(texts[0]).fontSize) / 36;
+  const { stripMin, stripMax, shiftX, shiftY } = LOAD_OUT.params;
+  const g = new SoleGraphic(src.width, src.height, makeCanvas);
+  g.prepare({
+    photo: src,
+    name: 'memorial sole',
+    place: 'load',
+    params: { stripMin, stripMax, shiftX: shiftX * u, shiftY: shiftY * u, stepsMin: LOAD_OUT.steps, stepsMax: LOAD_OUT.steps },
+  });
+
+  // キャンバスを文字のあった場所に重ね、文字そのものは隠す
+  const stage = $('stage').getBoundingClientRect();
+  Object.assign(g.canvas.style, {
+    position: 'absolute',
+    left: `${(box.left - stage.left) / scale}px`,
+    top: `${(box.top - stage.top) / scale}px`,
+    width: `${(box.right - box.left) / scale}px`,
+    height: `${(box.bottom - box.top) / scale}px`,
+  });
+  screen.append(g.canvas);
+  texts.forEach((el) => { el.style.visibility = 'hidden'; });
+
+  // 帯のずれが少しずつ進み、少し遅れて薄くなっていく
+  await frames(LOAD_OUT.ms, (t) => {
+    g.stepTo(g.total * easeInOut(t));
+    g.canvas.style.opacity = 1 - easeInOut(Math.max(0, (t - 0.25) / 0.75));
+  });
+  go('name');
+  setTimeout(() => g.canvas.remove(), FADE_MS);
+}
+
+// 文字を、画面に出ているとおりの位置と書体でキャンバスに描き写す（1文字ずつ画面上の位置を測って置く）。
+// box は画面上の範囲（px）、k はキャンバスの細かさ（画面の 1px あたりのキャンバスの px）
+function drawTexts(elements, box, k) {
+  const c = makeCanvas(Math.round((box.right - box.left) * k), Math.round((box.bottom - box.top) * k));
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff';
+  g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = '#000';
+
+  // FONTPLUS の斜体の書体は「標準」として登録されているので、届いているときは傾けずに描く（二重に傾かないように）
+  const loaded = new Set([...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family.replace(/"/g, '')));
+  const range = document.createRange();
+  for (const el of elements) {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let node; (node = walker.nextNode());) {
+      const cs = getComputedStyle(node.parentElement);
+      const first = cs.fontFamily.split(',')[0].trim().replace(/"/g, '');
+      const style = first.startsWith('NHaasGroteskDSPro') && loaded.has(first) ? 'normal' : cs.fontStyle;
+      g.font = `${style} ${cs.fontWeight} ${parseFloat(cs.fontSize) * scale * k}px ${cs.fontFamily}`;
+      for (let i = 0; i < node.length; i++) {
+        if (!node.data[i].trim()) continue;
+        range.setStart(node, i);
+        range.setEnd(node, i + 1);
+        const r = range.getBoundingClientRect();
+        const m = g.measureText(node.data[i]);
+        g.fillText(node.data[i], (r.left - box.left) * k, (r.top - box.top) * k + m.fontBoundingBoxAscent);
+      }
+    }
+  }
+  return c;
+}
 
 // ---------------------------------------------------------------------------
 // 起動
@@ -562,12 +684,9 @@ ready = (async () => {
   viewer.setTexture(graphic.canvas);
 })();
 
-// ロード画面：読み込みが済んだら、文字が消えきったところ（フェードの1回の終わり）で名前の画面へ。
-// 読み込みが速くても、フェードイン・アウトを1回は見せる
-Promise.allSettled([ready, document.fonts.ready]).then(() => {
-  document.querySelector('[data-screen="load"] .copy')
-    .addEventListener('animationiteration', () => go('name'), { once: true });
-});
+// ロード画面：読み込みが済んだら、文字がいちばん濃くなったところで崩しながら消し、名前の画面へ。
+// 読み込みが速くても、フェードインは1回見せる
+Promise.allSettled([ready, document.fonts.ready]).then(leaveLoad);
 
 ready.catch((e) => {
   console.error(e);

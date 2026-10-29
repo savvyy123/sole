@@ -168,20 +168,20 @@ html.scrollable body {
 .print  { left: 911px; top: 918px; }
 .others { left: 147px; top: 942px; }
 
-/* ロード画面（Figma の load）。文字がフェードイン・アウトを繰り返す */
+/* ロード画面（Figma の load）。文字がフェードイン・アウトを繰り返す（終わるときは app.js が崩しながら消す） */
 [data-screen="load"] .copy { left: 732px; top: 476px; }
 
 .load-ja {
   left: 1146px;
   top: 662px;
   font-size: 36px;
-  font-family: var(--font-light);
-  font-weight: 300;      /* 45 Light */
+  font-family: var(--font-thin);
+  font-weight: 100;      /* 25 XThin（日本語なので、ヒラギノのいちばん細い太さで出る） */
   letter-spacing: 7.2px;
 }
 
-[data-screen="load"] > * { opacity: 0; }
-[data-screen="load"].active > * { animation: breathe 2.4s ease-in-out infinite; }
+[data-screen="load"] > p { opacity: 0; }
+[data-screen="load"].active > p { animation: breathe 2.4s ease-in-out infinite; }
 
 @keyframes breathe {
   50% { opacity: 1; }
@@ -387,10 +387,13 @@ button.field { cursor: pointer; }
   font-synthesis: none;
 }
 
+/* Print your memory.：PC は 56 Italic、スマホは 35 Thin */
 .print {
   font-size: 64px;
-  font-family: var(--font-thin);
-  font-weight: 200;
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-weight: 400;
+  font-synthesis: none;
   letter-spacing: 32px;
   line-height: 80px;
 }
@@ -411,7 +414,7 @@ button.field { cursor: pointer; }
   font-style: italic;
   font-weight: 400;
   font-synthesis: none;
-  letter-spacing: 12px;
+  letter-spacing: 20px;
 }
 
 /* 名前の画面の右上 */
@@ -572,7 +575,7 @@ html.mobile .others {
   left: 26px;
   top: 121px;
   font-size: 16px;
-  letter-spacing: 4.8px;
+  letter-spacing: 8px;
 }
 
 html.mobile .intro-others {
@@ -598,6 +601,9 @@ html.mobile .print {
   left: 168px;
   top: 122px;
   font-size: 14px;
+  font-family: var(--font-thin);
+  font-style: normal;
+  font-weight: 200;      /* 35 Thin */
   letter-spacing: 7px;
   line-height: 80px;
 }
@@ -626,32 +632,37 @@ html.mobile .info {
   letter-spacing: 2.4px;
 }
 
-html.mobile .info-name,
-html.mobile .landscape .info-name    { left: 17.5px; top: 324.5px; }
-html.mobile .info-place              { left: 17.5px; top: 346.5px; }
-html.mobile .info-size               { display: none; }   /* スマホ用の Figma にまだ Size がない */
-html.mobile .info-picture,
-html.mobile .landscape .info-picture { left: 17.5px; top: 372.5px; }
-html.mobile .info-stroke             { left: 17.5px; top: 502.5px; }
+/* 縦長の写真のとき（Figma の iPhone - 7） */
+html.mobile .info-name    { left: 17.5px; top: 324.5px; }
+html.mobile .info-place   { left: 17.5px; top: 346.5px; }
+html.mobile .info-size    { left: 17.5px; top: 370.5px; }
+html.mobile .info-picture { left: 17.5px; top: 394.5px; }
+html.mobile .info-stroke  { left: 17.5px; top: 509.5px; }
+
+/* 横長の写真のとき（Figma の iPhone - 6） */
+html.mobile .landscape .info-name    { left: 17.5px; top: 320.5px; }
+html.mobile .landscape .info-place   { left: 17.5px; top: 343.5px; }
+html.mobile .landscape .info-size    { left: 17.5px; top: 366.5px; }
+html.mobile .landscape .info-picture { left: 17.5px; top: 393.5px; }
 
 /* 縦長の写真のとき */
 html.mobile .out-picture {
   left: 89.5px;
-  top: 372.5px;
+  top: 394.5px;
   width: 83px;
   height: 110px;
 }
 
 /* 横長の写真のとき */
 html.mobile .landscape .out-picture {
-  left: 86.5px;
+  top: 393.5px;
   width: 150px;
   height: 112px;
 }
 
 html.mobile .out-stroke {
   left: 89.5px;
-  top: 502.5px;
+  top: 509.5px;
   width: 120px;
   height: 80px;
 }
